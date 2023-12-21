@@ -26,6 +26,7 @@ def cosinusoidal_wave(t, A, f):
     return A * np.cos(2 * np.pi * f * t)
 
 def convolution(signal1, signal2, dt):
+    dt = dt/2
     result = np.convolve(signal1, signal2, mode='full') * dt
     t_conv = np.arange(-10, -10 + len(result) * dt, dt)
     return t_conv, result
