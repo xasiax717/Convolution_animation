@@ -1,14 +1,13 @@
 import tkinter as tk
-from tkinter import Canvas
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
-class MatplotlibApp:
+class App:
     def __init__(self, master):
         self.master = master
-        self.master.title("Matplotlib App")
+        self.master.title("Convolution")
 
         self.rect_fig = Figure(figsize=(5, 3), tight_layout=True)
         self.ax1 = self.rect_fig.add_subplot(111)
@@ -65,5 +64,5 @@ class MatplotlibApp:
 
 
 root = tk.Tk()
-app = MatplotlibApp(root)
+app = App(root)
 root.mainloop()
