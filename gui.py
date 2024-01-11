@@ -35,21 +35,29 @@ class App:
         self.conv_canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     def rect_plot(self):
-        x_values = np.linspace(-0.5, 0.5, 400)
-        y_values = 0*x_values + 1
-        self.ax1.plot(x_values, y_values, color='blue')
+        dt = 0.01
+        t = np.arange(-10, 10, dt)
+        rect = square_wave_non_periodic(t, T=2)
+        #x_values = np.linspace(-0.5, 0.5, 400)
+        #y_values = 0*x_values + 1
+        self.ax1.plot(t, rect, color='blue')
         self.ax1.set_title("$y=rect(x)$")
         self.ax1.set_xlabel("X")
         self.ax1.set_ylabel("Y")
 
-    def tri_plot(self):
-        x_values = np.linspace(-1, 0, 400)
-        y_values = x_values + 1
 
-        x_values2 = np.linspace(0, 1, 400)
-        y_values2 = -x_values2 + 1
-        self.ax2.plot(x_values, y_values, color='blue')
-        self.ax2.plot(x_values2, y_values2, color='blue')
+    def tri_plot(self):
+        dt = 0.01
+        t = np.arange(-10, 10, dt)
+        tri = triangle_wave_non_periodic(t, T=2)
+
+        #x_values = np.linspace(-1, 0, 400)
+        #y_values = x_values + 1
+
+        #x_values2 = np.linspace(0, 1, 400)
+        #y_values2 = -x_values2 + 1
+        self.ax2.plot(t, tri, color='blue')
+        #self.ax2.plot(x_values2, y_values2, color='blue')
         self.ax2.set_title("$y = tri(x)$")
         self.ax2.set_xlabel("X")
         self.ax2.set_ylabel("Y")
