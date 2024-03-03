@@ -1,12 +1,62 @@
+import tkinter as tk
+from tkinter import messagebox, ttk
+
 import customtkinter
 from PIL import Image, ImageTk
 from CTkMessagebox import CTkMessagebox
-import tkinter as tk
-from tkinter import messagebox
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from matplotlib.animation import FuncAnimation
+import numpy as np
+import matplotlib.pyplot as plt
+from convolution import convolution, triangle_wave_non_periodic, square_wave_non_periodic
+
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
 
+class AnimatedPlot:
+    def __init__(self, root, signal1_name, signal2_name, param1, param2):
+        self.dt = 0.01
+        self.t = np.arange(-10, 10, self.dt)
+
+        self.signal1 = triangle_wave_non_periodic(self.t, 2)
+        self.signal2 = square_wave_non_periodic(self.t, 2)
+
+        self.x, self.y = convolution(self.signal1, self.signal2, self.dt)
+
+        # Initialize the plot
+        self.fig, self.ax = plt.subplots(figsize=(5, 5))  # Adjust the figure size here
+        self.line, = self.ax.plot(self.x, self.y)
+
+        # Initialize animation
+        self.anim = FuncAnimation(self.fig, self.update, frames=50, init_func=self.init, blit=True)
+
+        # Add the plot widget to the Tkinter interface using grid
+        self.canvas = FigureCanvasTkAgg(self.fig, master=root)
+        self.canvas.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
+        self.canvas.draw()
+
+        self.anim_running = True
+
+    def toggle_animation(self):
+        if self.anim_running:
+            self.anim.event_source.stop()
+        else:
+            self.anim.event_source.start()
+        self.anim_running = not self.anim_running
+
+    def init(self):
+        self.line.set_ydata(np.ma.array(self.x, mask=True))
+        return self.line,
+
+    def update(self, frame):
+        self.line.set_xdata(self.x[:frame * 100])
+        self.line.set_ydata(self.y[:frame * 100])
+        return self.line,
+
+def create_animated_plot(root):
+    return AnimatedPlot(root, "tri", "sqr", 1, 2)
 
 # Create signals classes
 class Signal1:
@@ -64,6 +114,7 @@ class Signal1:
 
 class Signal2:
     def __init__(self):
+        super().__init__()
         self.type = None
         self.amplitude = None
         self.phase = None
@@ -285,31 +336,34 @@ class App(customtkinter.CTk):
 
     def on_enter_continue(self, event):  # hover image continue button
         light_image = Image.open('resources/continue_hover_blue.png')
-        photo_light_image = ImageTk.PhotoImage(light_image)
+        photo_light_image = customtkinter.CTkImage(light_image)
         self.continueButton.configure(image=photo_light_image)
         self.continueButton.configure(fg_color='transparent')
 
     def on_leave_continue(self, event):
         image = Image.open('resources/continue_blue.png')
-        photo_image = ImageTk.PhotoImage(image)
+        photo_image = customtkinter.CTkImage(image)
         self.continueButton.configure(image=photo_image)
         self.continueButton.configure(fg_color='transparent')
 
     def on_enter_pause(self, event):  # hover image pause button
         pause_img = Image.open('resources/pause_hover_red.png')
-        pause_photo_img = ImageTk.PhotoImage(pause_img)
+        pause_photo_img = customtkinter.CTkImage(pause_img)
         self.pauseButton.configure(image=pause_photo_img)
         self.pauseButton.configure(fg_color='transparent')
 
     def on_leave_pause(self, event):
         pause_img = Image.open('resources/pause_50.png')
-        pause_photo_img = ImageTk.PhotoImage(pause_img)
+        pause_photo_img = customtkinter.CTkImage(pause_img)
         self.pauseButton.configure(image=pause_photo_img)
         self.pauseButton.configure(fg_color='transparent')
 
     def destroy(self):
         for frame in self.modifying_frames:
             frame.destroy()
+
+    def toggle_animation(self):
+        self.animated_plot.toggle_animation()
 
     def main_button_event(self):  # frame activated when main is chosen
         # create frame of signals type choosing
@@ -424,19 +478,18 @@ class App(customtkinter.CTk):
                                                              command=self.on_confirm_params_button_click)
         self.confirm_params_button.grid(row=6, column=1, pady=(20, 20))
 
+
         # create the simulation frame
         self.simulation_frame = customtkinter.CTkFrame(self)
         self.modifying_frames.append(self.simulation_frame)
-        self.simulation_frame.grid_rowconfigure((0, 2), weight=0)
-        self.simulation_frame.grid_rowconfigure(1, weight=1)
-        self.simulation_frame.grid_columnconfigure((0, 1, 2), weight=1)
+        self.simulation_frame.grid_rowconfigure(1, weight=1)  # Allow the graph to expand vertically
+        self.simulation_frame.grid_columnconfigure(0, weight=1)  # Allow the graph to expand horizontally
         self.simulation_frame.grid(row=0, column=2, rowspan=2, padx=(0, 10), pady=(20, 0), sticky="nsew")
-
         # top text
         continue_img = Image.open('resources/continue_blue.png')
-        continue_photo_img = ImageTk.PhotoImage(continue_img)
+        continue_photo_img = customtkinter.CTkImage(continue_img)
         pause_img = Image.open('resources/pause_50.png')
-        pause_photo_img = ImageTk.PhotoImage(pause_img)
+        pause_photo_img = customtkinter.CTkImage(pause_img)
         self.text_label = customtkinter.CTkLabel(self.simulation_frame, text="Press    ", font=font)
         self.text_label.grid(row=0, column=0, padx=(10, 0), pady=(10, 10))
         self.image_label = customtkinter.CTkLabel(self.simulation_frame, text='', image=continue_photo_img,
@@ -445,7 +498,7 @@ class App(customtkinter.CTk):
         rest_label = customtkinter.CTkLabel(self.simulation_frame, text="    to start the animation", font=font)
         rest_label.grid(row=0, column=2, padx=(0, 10), pady=(10, 10))
 
-        # todo: import here the simulation window, use parameters of signals classes (column=0, row=1, columnspan=3)
+        self.animated_plot = AnimatedPlot(self.simulation_frame, "tri", "sqr", 1, 2)
 
         # bottom buttons
         self.continueButton = customtkinter.CTkButton(
@@ -459,8 +512,9 @@ class App(customtkinter.CTk):
         )
         self.continueButton.bind("<Enter>", self.on_enter_continue)
         self.continueButton.bind("<Leave>", self.on_leave_continue)
-        self.continueButton.grid(column=1, row=2, pady=(10, 10))
+        self.continueButton.grid(column=0, row=2, pady=(10, 10), sticky="e")
 
+        # Remove the pause button from the third column
         self.pauseButton = customtkinter.CTkButton(
             self.simulation_frame,
             text='',
@@ -468,12 +522,26 @@ class App(customtkinter.CTk):
             border_width=0,
             width=50,
             fg_color='transparent',
-            hover=False
+            hover=False,
+            command=self.toggle_animation  # Add this line
         )
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
+        self.pauseButton.grid(row=2, column=1, pady=(10, 10), sticky="w")
 
-        self.pauseButton.grid(row=2, column=2, pady=(10, 10))
+        # Add these methods to set the pause button image on hover
+        def on_enter_pause(self, event):
+            pause_img_hover = Image.open('resources/pause_hover_red.png')
+            pause_photo_img_hover = customtkinter.CTkImage(pause_img_hover)
+            self.pauseButton.configure(image=pause_photo_img_hover)
+            self.pauseButton.configure(fg_color='transparent')
+
+        def on_leave_pause(self, event):
+            pause_img = Image.open('resources/pause_50.png')
+            pause_photo_img = customtkinter.CTkImage(pause_img)
+            self.pauseButton.configure(image=pause_photo_img)
+            self.pauseButton.configure(fg_color='transparent')
+
 
     def help_button_event(self):
         self.destroy()
@@ -485,38 +553,6 @@ class App(customtkinter.CTk):
         self.text_frame_label.grid(row=0, column=0, pady=(20, 0))
         self.textbox = customtkinter.CTkTextbox(self.text_about_frame, width=960, height=450)
         help_text = """
-            ### Convolution Animation App
-
-            Welcome to the Convolution Animation App! This application allows you to visualize convolution operations between two signals.
-
-            #### What is Convolution?
-
-            Convolution is a mathematical operation that combines two signals to produce a third signal. In the context of this app, you can choose different 
-            types of signals (e.g., Rectangle, Triangle, Sinus, Cosinus, Exponential) and adjust their parameters to observe how convolution affects them.
-
-            #### How to Use the Application:
-
-            1. **Choosing Signal Types:**
-               - Click on the "Choose signal 1" and "Choose signal 2" dropdown menus in the main window to select the types of signals you want to use for 
-               convolution.
-
-            2. **Setting Signal Parameters:**
-               - After selecting signal types, enter the parameters for each signal in the provided input fields. The parameters to be entered depend on the 
-               chosen signal types.
-
-            3. **Confirming Parameters:**
-               - Once you've entered the parameters for both signals, click the "Confirm parameters" button to validate and apply them.
-
-            4. **Starting the Animation:**
-               - After confirming the parameters, press the play button (green arrow) to start the animation. You can pause the animation at any time by 
-               clicking the pause button (red square).
-
-            #### Additional Options:
-
-            - **Appearance Mode:** You can change the appearance mode of the app (Light, Dark, or System) using the dropdown menu in the sidebar.
-            - **UI Scaling:** Adjust the size of UI elements by selecting a scaling option from the dropdown menu in the sidebar.
-
-            For further assistance, please refer to the documentation or contact support.
             """
         self.textbox.insert("0.0", help_text)
         self.textbox.grid(row=1, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
@@ -531,34 +567,22 @@ class App(customtkinter.CTk):
         self.text_frame_label.grid(row=0, column=0, pady=(20, 0))
         self.textbox = customtkinter.CTkTextbox(self.text_about_frame, width=960, height=450)
         help_text = """
-        ### Our Team
-
-        Hey there! We're a group of students from the Warsaw University of Technology, Faculty of Electronics and Information Technology. Meet the team:
-
-        - Zuzanna Gorecka
-        - Zofia Lewkowicz
-        - Emilia Anczarska
-        - Dana Betsina
-        - Joanna Brodnicka
-
-        Each member brings a unique set of skills and perspectives to the table, contributing to the success and innovation of our projects.
-
-        ### Our Project
-
-        We've got a project brewing that we're pretty excited about. Basically, we're working on an app to help young 
-        students wrap their heads around a tricky part of signals theory called convolution.
-
-        ### Our Goal
-
-        Our main aim? To make learning about signals and convolution way less daunting. We want our app to be super user-friendly and fun to use, so students can dive into the world of signal processing with confidence.
-
-        So, that's us in a nutshell – a bunch of tech enthusiasts on a mission to simplify the complicated and make learning awesome!
         """
 
         self.textbox.insert("0.0", help_text)
         self.textbox.grid(row=1, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
 
+    def destroy_frames(self):
+        for frame in self.modifying_frames:
+            if frame.winfo_exists():  # Check if the frame still exists
+                frame.destroy()
+
+    def on_closing(self):
+        self.destroy_frames()
+        super().destroy()
+
 
 if __name__ == "__main__":
     app = App()
+    app.protocol("WM_DELETE_WINDOW", app.on_closing)  # Bind the close button event
     app.mainloop()
