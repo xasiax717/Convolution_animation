@@ -1,11 +1,7 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
-
 import customtkinter
-from PIL import Image, ImageTk
-from CTkMessagebox import CTkMessagebox
+from PIL import Image
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
 from matplotlib.animation import FuncAnimation
 import numpy as np
 import matplotlib.pyplot as plt
@@ -572,17 +568,25 @@ class App(customtkinter.CTk):
         self.textbox.insert("0.0", help_text)
         self.textbox.grid(row=1, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
 
+    # def destroy_frames(self):
+    #     for frame in self.modifying_frames:
+    #         if frame.winfo_exists():  # Check if the frame still exists
+    #             frame.tkinter.Tk.quit()
+    #
+    # def on_closing(self):
+    #     self.destroy_frames()
+    #     super().tkinter.Tk.quit()
+
     def destroy_frames(self):
         for frame in self.modifying_frames:
-            if frame.winfo_exists():  # Check if the frame still exists
+            if frame.winfo_exists():
                 frame.destroy()
 
     def on_closing(self):
         self.destroy_frames()
-        super().destroy()
-
+        self.quit()
 
 if __name__ == "__main__":
     app = App()
-    app.protocol("WM_DELETE_WINDOW", app.on_closing)  # Bind the close button event
+    app.protocol("WM_DELETE_WINDOW", app.on_closing)
     app.mainloop()
