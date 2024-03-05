@@ -35,10 +35,13 @@ class AnimatedPlot:
 
         self.anim_running = True
 
-    def toggle_animation(self):
+    def toggle_pause_animation(self):
         if self.anim_running:
             self.anim.event_source.stop()
-        else:
+        self.anim_running = not self.anim_running
+
+    def toggle_start_animation(self):
+        if not self.anim_running:
             self.anim.event_source.start()
         self.anim_running = not self.anim_running
 
@@ -358,8 +361,11 @@ class App(customtkinter.CTk):
         for frame in self.modifying_frames:
             frame.destroy()
 
-    def toggle_animation(self):
-        self.animated_plot.toggle_animation()
+    def toggle_pause_animation(self):
+        self.animated_plot.toggle_pause_animation()
+
+    def toggle_start_animation(self):
+        self.animated_plot.toggle_start_animation()
 
     def main_button_event(self):  # frame activated when main is chosen
         # create frame of signals type choosing
@@ -495,8 +501,6 @@ class App(customtkinter.CTk):
         rest_label.grid(row=0, column=2, padx=(0, 10), pady=(10, 10))
 
         self.animated_plot = AnimatedPlot(self.simulation_frame, "tri", "sqr", 1, 2)
-
-        # bottom buttons
         self.continueButton = customtkinter.CTkButton(
             self.simulation_frame,
             text='',
@@ -504,13 +508,13 @@ class App(customtkinter.CTk):
             border_width=0,
             width=50,
             fg_color='transparent',
-            hover=False
+            hover=False,
+            command=self.toggle_start_animation
         )
         self.continueButton.bind("<Enter>", self.on_enter_continue)
         self.continueButton.bind("<Leave>", self.on_leave_continue)
         self.continueButton.grid(column=0, row=2, pady=(10, 10), sticky="e")
 
-        # Remove the pause button from the third column
         self.pauseButton = customtkinter.CTkButton(
             self.simulation_frame,
             text='',
@@ -519,13 +523,12 @@ class App(customtkinter.CTk):
             width=50,
             fg_color='transparent',
             hover=False,
-            command=self.toggle_animation  # Add this line
+            command=self.toggle_pause_animation
         )
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
         self.pauseButton.grid(row=2, column=1, pady=(10, 10), sticky="w")
 
-        # Add these methods to set the pause button image on hover
         def on_enter_pause(self, event):
             pause_img_hover = Image.open('resources/pause_hover_red.png')
             pause_photo_img_hover = customtkinter.CTkImage(pause_img_hover)
