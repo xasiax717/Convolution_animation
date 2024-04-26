@@ -5,24 +5,64 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.animation import FuncAnimation
 import numpy as np
 import matplotlib.pyplot as plt
-from convolution import convolution, triangle_wave_non_periodic, square_wave_non_periodic
+from convolution import convolution, triangle_wave, square_wave, exponential_wave, sinusoidal_wave, cosinusoidal_wave
 
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
 
 class AnimatedPlot:
-    def __init__(self, root, signal1_name, signal2_name, param1, param2):
+    def __init__(self, root, signal1, signal2):
         self.dt = 0.01
         self.t = np.arange(-10, 10, self.dt)
 
-        self.signal1 = triangle_wave_non_periodic(self.t, 2)
-        self.signal2 = square_wave_non_periodic(self.t, 2)
+        # "Rectangle": ["amplitude", "shift", "width"],
+        # "Triangle": ["amplitude", "shift", "width"],
+        # "Sinus": ["amplitude", "frequency", "phase"],
+        # "Cosinus": ["amplitude", "frequency", "phase"],
+        # "Exponential": ["amplitude", "rate"]
 
-        self.x, self.y = convolution(self.signal1, self.signal2, self.dt)
+
+        if signal1.get_type() == "Rectangle":
+            sig1 = square_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_shift(), self.signal1.get_width())
+
+        if signal1.get_type() == "Triangle":
+            sig1 = triangle_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_shift(), self.signal1.get_width())
+
+        if signal1.get_type() == "Exponential":
+            sig1 = exponential_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_rate())
+
+        if signal1.get_type() == "Sinus":
+            sig1 = sinusoidal_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_frequency(), self.signal1.get_phase())
+
+        if signal1.get_type() == "Cosinus":
+            sig1 = cosinusoidal_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_frequency(), self.signal1.get_phase())
+
+
+        if signal2.get_type() == "Rectangle":
+            sig2 = square_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_shift(), self.signal2.get_width())
+
+        if signal2.get_type() == "Triangle":
+            sig2 = triangle_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_shift(), self.signal2.get_width())
+
+        if signal2.get_type() == "Exponential":
+            sig2 = exponential_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_rate())
+
+        if signal2.get_type() == "Sinus":
+            sig2 = sinusoidal_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_frequency(), self.signal2.get_phase())
+
+        if signal2.get_type() == "Cosinus":
+            sig2 = cosinusoidal_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_frequency(), self.signal2.get_phase())
+
+
+
+        # sig1 = triangle_wave_non_periodic(self.t, 2)
+        # sig2 = square_wave_non_periodic(self.t, 2)
+
+        self.x, self.y = convolution(sig1, sig2, self.dt)
 
         # Initialize the plot
-        self.fig, self.ax = plt.subplots(figsize=(5, 5))  # Adjust the figure size here
+        self.fig, self.ax = plt.subplots(figsize=(5, 5))
         self.line, = self.ax.plot(self.x, self.y)
 
         # Initialize animation
@@ -499,7 +539,8 @@ class App(customtkinter.CTk):
         rest_label = customtkinter.CTkLabel(self.simulation_frame, text="    to start the animation", font=font)
         rest_label.grid(row=0, column=2, padx=(0, 10), pady=(10, 10))
 
-        self.animated_plot = AnimatedPlot(self.simulation_frame, "tri", "sqr", 1, 2)
+        self.animated_plot = AnimatedPlot(self.simulation_frame, signal1, signal2)
+
         self.continueButton = customtkinter.CTkButton(
             self.simulation_frame,
             text='',
