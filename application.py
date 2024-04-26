@@ -122,8 +122,6 @@ class Signal2:
 
 class App(customtkinter.CTk):
 
-
-
     def __init__(self):
         super().__init__()
         self.modifying_frames = []
@@ -517,7 +515,7 @@ class App(customtkinter.CTk):
             width=50,
             fg_color='transparent',
             hover=False,
-            #command=self.toggle_start_animation
+            command=self.toggle_start_animation
         )
         self.continueButton.bind("<Enter>", self.on_enter_continue)
         self.continueButton.bind("<Leave>", self.on_leave_continue)
@@ -531,7 +529,7 @@ class App(customtkinter.CTk):
             width=50,
             fg_color='transparent',
             hover=False,
-            #command=self.toggle_pause_animation
+            command=self.toggle_pause_animation
         )
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
@@ -549,20 +547,19 @@ class App(customtkinter.CTk):
             self.pauseButton.configure(image=pause_photo_img)
             self.pauseButton.configure(fg_color='transparent')
 
+        def toggle_pause_animation(self):
+            if hasattr(self, 'anim') and self.anim is not None:
+                if self.anim.event_source is not None:
+                    if self.anim._running:
+                        self.anim.event_source.stop()
+                    else:
+                        self.anim.event_source.start()
 
-
-    # def toggle_pause_animation(self):
-    #     if hasattr(self, 'animation_object') and self.animation_object is not None:
-    #         if self.animation_object.event_source is not None:
-    #             if self.animation_object._running:
-    #                 self.animation_object.event_source.stop()  # Pause the animation
-    #             else:
-    #                 self.animation_object.event_source.start()  # Resume the animation
-    #
-    # def toggle_start_animation(self):
-    #     if not hasattr(self, 'animation_object') or self.animation_object is None:
-    #         # Start the animation
-    #         self.animation_object = AnimatedPlot(self, "tri", "sqr", 1, 2)
+        def toggle_start_animation(self):
+            if not hasattr(self, 'anim') or self.anim is None:
+                self.init()
+                self.anim = FuncAnimation(self.fig, self.animate, frames=200, interval=20, blit=True)
+                self.canvas.draw()
     def help_button_event(self):
         self.destroy()
         self.text_about_frame = customtkinter.CTkFrame(self)
