@@ -25,11 +25,11 @@ def exponential_wave(t, tau):
 def unit_step(t):
     return np.heaviside(t, 1)
 
-def sinusoidal_wave(t, A, f):
-    return A * np.sin(2 * np.pi * f * t)
+def sinusoidal_wave(t, A, f, φ):
+    return A * np.sin(2 * np.pi * f * t + φ)
 
-def cosinusoidal_wave(t, A, f):
-    return A * np.cos(2 * np.pi * f * t)
+def cosinusoidal_wave(t, A, f, phase):
+    return A * np.cos(2 * np.pi * f * t + phase)
 
 def convolution(signal1, signal2, dt):
     dt = dt/2
@@ -124,10 +124,10 @@ def main():
             selected_signals.append(unit_step(t))
             labels.append('Unit Step')
         elif choice == 5:
-            selected_signals.append(sinusoidal_wave(t, A=1, f=1))
+            selected_signals.append(sinusoidal_wave(t, A=2, f=0.5, φ=0))
             labels.append('Sinusoidal Wave')
         elif choice == 6:
-            selected_signals.append(cosinusoidal_wave(t, A=1, f=1))
+            selected_signals.append(cosinusoidal_wave(t, A=3, f=0.1, phase=0))
             labels.append('Cosinusoidal Wave')
         elif choice == 7:
             selected_signals.append(square_wave_non_periodic(t, amplitude=1, shift=1, width=1))
@@ -142,8 +142,6 @@ def main():
     t_conv, result = convolution(selected_signals[0], selected_signals[1], dt)
 
     # Wyświetlenie wykresów
-    print(result[2000])
-    print(t_conv[0])
     plot_signals(t, selected_signals, labels, 'Selected Signals')
     plot_signals(t_conv, [result], ['Convolution Result'], 'Convolution Result')
 
