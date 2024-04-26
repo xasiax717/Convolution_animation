@@ -1,11 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# "Rectangle": ["amplitude", "shift", "width"],
+# "Triangle": ["amplitude", "shift", "width"],
+# "Sinus": ["amplitude", "frequency", "phase"],
+# "Cosinus": ["amplitude", "frequency", "phase"],
+# "Exponential": ["amplitude", "rate"]
+
 def square_wave(t, T):
     return np.where(np.mod(t, T) < T / 2, 1, 0)
 
-def square_wave_non_periodic(t, T):
-    return np.where(np.abs(t) < T / 2, 1, 0)
+def square_wave_non_periodic(t, amplitude, shift, width):
+    return np.where(np.abs(t-shift) < width / 2, amplitude, 0)
 
 def triangle_wave(t, T):
     return np.abs((t / (T / 2)) % 2 - 1)
@@ -30,6 +36,50 @@ def convolution(signal1, signal2, dt):
     result = np.convolve(signal1, signal2, mode='full') * dt
     t_conv = np.arange(-10, -10 + len(result) * dt, dt)
     return t_conv, result
+
+def get_convolution_data(signal1_choice, signal2_choice, dt):
+    t = np.arange(-10, 10, dt)
+
+    if signal1_choice == 1:
+        signal1 = square_wave(t, T=2)
+    elif signal1_choice == 2:
+        signal1 = triangle_wave(t, T=2)
+    elif signal1_choice == 3:
+        signal1 = exponential_wave(t, tau=1)
+    elif signal1_choice == 4:
+        signal1 = unit_step(t)
+    elif signal1_choice == 5:
+        signal1 = sinusoidal_wave(t, A=1, f=1)
+    elif signal1_choice == 6:
+        signal1 = cosinusoidal_wave(t, A=1, f=1)
+    elif signal1_choice == 7:
+        signal1 = square_wave_non_periodic(t, amplitude=2, shift=1, width=2)
+    elif signal1_choice == 8:
+        signal1 = triangle_wave_non_periodic(t, T=2)
+    else:
+        raise ValueError("Invalid choice for signal 1.")
+
+    if signal2_choice == 1:
+        signal2 = square_wave(t, T=2)
+    elif signal2_choice == 2:
+        signal2 = triangle_wave(t, T=2)
+    elif signal2_choice == 3:
+        signal2 = exponential_wave(t, tau=1)
+    elif signal2_choice == 4:
+        signal2 = unit_step(t)
+    elif signal2_choice == 5:
+        signal2 = sinusoidal_wave(t, A=1, f=1)
+    elif signal2_choice == 6:
+        signal2 = cosinusoidal_wave(t, A=1, f=1)
+    elif signal2_choice == 7:
+        signal2 = square_wave_non_periodic(t, amplitude=2, width=2, shift=5)
+    elif signal2_choice == 8:
+        signal2 = triangle_wave_non_periodic(t, T=2)
+    else:
+        raise ValueError("Invalid choice for signal 2.")
+
+    t_conv, result = convolution(signal1, signal2, dt)
+    return t, signal1, signal2, t_conv, result
 
 def plot_signals(t, signals, labels, title):
     plt.figure(figsize=(12, 8))
@@ -80,7 +130,7 @@ def main():
             selected_signals.append(cosinusoidal_wave(t, A=1, f=1))
             labels.append('Cosinusoidal Wave')
         elif choice == 7:
-            selected_signals.append(square_wave_non_periodic(t, T=2))
+            selected_signals.append(square_wave_non_periodic(t, amplitude=1, shift=1, width=1))
             labels.append('Square Wave')
         elif choice == 8:
             selected_signals.append(triangle_wave_non_periodic(t, T=2))
