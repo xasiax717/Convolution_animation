@@ -92,10 +92,10 @@ def main():
     while len(selected_signals) < 2:
         choice = int(input("Enter the number of the signal (1-6): "))
         if choice == 1:
-            selected_signals.append(square_wave(t, T=2))
+            selected_signals.append(square_wave(t, amplitude=1, shift=1, width=1))
             labels.append('Square Wave')
         elif choice == 2:
-            selected_signals.append(triangle_wave(t, T=2))
+            selected_signals.append(triangle_wave(t, shift=1, amplitude=1, width=1))
             labels.append('Triangle Wave')
         elif choice == 3:
             selected_signals.append(exponential_wave(t, tau=1))
