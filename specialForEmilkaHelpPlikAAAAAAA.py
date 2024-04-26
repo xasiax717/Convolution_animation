@@ -13,46 +13,43 @@ customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
 
 class AnimatedPlot:
     def __init__(self, root, signal1, signal2):
+        self.signal1 = signal1  # Pass the signal1 object
+        self.signal2 = signal2
         self.dt = 0.01
         self.t = np.arange(-10, 10, self.dt)
 
-        # "Rectangle": ["amplitude", "shift", "width"],
-        # "Triangle": ["amplitude", "shift", "width"],
-        # "Sinus": ["amplitude", "frequency", "phase"],
-        # "Cosinus": ["amplitude", "frequency", "phase"],
-        # "Exponential": ["amplitude", "rate"]
-
+        print(self.signal2.get_amplitude())
 
         if signal1.get_type() == "Rectangle":
-            sig1 = square_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_shift(), self.signal1.get_width())
+            sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
 
         if signal1.get_type() == "Triangle":
-            sig1 = triangle_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_shift(), self.signal1.get_width())
+            sig1 = triangle_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
 
         if signal1.get_type() == "Exponential":
-            sig1 = exponential_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_rate())
+            sig1 = exponential_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_rate()))
 
         if signal1.get_type() == "Sinus":
-            sig1 = sinusoidal_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_frequency(), self.signal1.get_phase())
+            sig1 = sinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), float(self.signal1.get_phase()))
 
         if signal1.get_type() == "Cosinus":
-            sig1 = cosinusoidal_wave(self.t, self.signal1, self.signal1.get_amplitude(), self.signal1.get_frequency(), self.signal1.get_phase())
+            sig1 = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), float(self.signal1.get_phase()))
 
 
         if signal2.get_type() == "Rectangle":
-            sig2 = square_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_shift(), self.signal2.get_width())
+            sig2 = square_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
 
         if signal2.get_type() == "Triangle":
-            sig2 = triangle_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_shift(), self.signal2.get_width())
+            sig2 = triangle_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
 
         if signal2.get_type() == "Exponential":
-            sig2 = exponential_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_rate())
+            sig2 = exponential_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_rate()))
 
         if signal2.get_type() == "Sinus":
-            sig2 = sinusoidal_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_frequency(), self.signal2.get_phase())
+            sig2 = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
 
         if signal2.get_type() == "Cosinus":
-            sig2 = cosinusoidal_wave(self.t, self.signal2, self.signal2.get_amplitude(), self.signal2.get_frequency(), self.signal2.get_phase())
+            sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
 
 
 
@@ -93,19 +90,17 @@ class AnimatedPlot:
         self.line.set_xdata(self.x[:frame * 100])
         self.line.set_ydata(self.y[:frame * 100])
         return self.line,
-def create_animated_plot(root):
-    return AnimatedPlot(root, "tri", "sqr", 1, 2)
 
 # Create signals classes
 class Signal1:
     def __init__(self):
-        self.type = None
-        self.amplitude = None
-        self.phase = None
-        self.frequency = None
-        self.shift = None
-        self.width = None
-        self.rate = None
+        self.type = "Rectangle"
+        self.amplitude = 1.0
+        self.phase = 1.0
+        self.frequency = 1.0
+        self.shift = 1.0
+        self.width = 1.0
+        self.rate = 1.0
 
     def set_type(self, type):
         self.type = type
@@ -153,13 +148,13 @@ class Signal1:
 class Signal2:
     def __init__(self):
         super().__init__()
-        self.type = None
-        self.amplitude = None
-        self.phase = None
-        self.frequency = None
-        self.shift = None
-        self.width = None
-        self.rate = None
+        self.type = "Rectangle"
+        self.amplitude = 1.0
+        self.phase = 1.0
+        self.frequency = 1.0
+        self.shift = 1.0
+        self.width = 1.0
+        self.rate = 1.0
 
     def set_type(self, type):
         self.type = type
@@ -320,11 +315,11 @@ class App(customtkinter.CTk):
                 getattr(self.signal2, f"set_{attribute}")(value)
 
             default_attributes = {
-                "Rectangle": {"frequency": None, "phase": None, "rate": None},
-                "Triangle": {"frequency": None, "phase": None, "rate": None},
-                "Sinus": {"shift": None, "width": None},
-                "Cosinus": {"shift": None, "width": None},
-                "Exponential": {"shift": None, "width": None}
+                "Rectangle": {"frequency": 1.0, "phase": 1.0, "rate": 1.0},
+                "Triangle": {"frequency": 1.0, "phase": 1.0, "rate": 1.0},
+                "Sinus": {"shift": 1.0, "width": 1.0},
+                "Cosinus": {"shift": 1.0, "width": 1.0},
+                "Exponential": {"shift": 1.0, "width": 1.0}
             }
             # set default (None) values into the rest of attributes
             for attribute, default_value in default_attributes.get(type_1, {}).items():
@@ -539,7 +534,7 @@ class App(customtkinter.CTk):
         rest_label = customtkinter.CTkLabel(self.simulation_frame, text="    to start the animation", font=font)
         rest_label.grid(row=0, column=2, padx=(0, 10), pady=(10, 10))
 
-        self.animated_plot = AnimatedPlot(self.simulation_frame, signal1, signal2)
+        self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
 
         self.continueButton = customtkinter.CTkButton(
             self.simulation_frame,
