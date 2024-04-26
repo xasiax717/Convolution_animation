@@ -1,5 +1,7 @@
 import tkinter
 import tkinter as tk
+from tkinter import ttk
+
 import customtkinter
 from PIL import Image
 from matplotlib.animation import FuncAnimation
@@ -12,7 +14,7 @@ customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
 
 
-from convolution import triangle_wave_non_periodic, square_wave_non_periodic, convolution
+# from convolution import triangle_wave_non_periodic, square_wave_non_periodic, convolution
 
 class Signal1:
     def __init__(self):
@@ -122,6 +124,8 @@ class Signal2:
 
 class App(customtkinter.CTk):
 
+
+
     def __init__(self):
         super().__init__()
         self.modifying_frames = []
@@ -132,7 +136,12 @@ class App(customtkinter.CTk):
 
         # application window, can change size if need
         self.title("convolution animation")
-        self.geometry(f"{1300}x{580}")
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        # Set the window's geometry to cover the full screen
+        self.geometry(f"{screen_width}x{screen_height}")
+
         # todo: set the icon  of the app
         # configure grid layout (3x3)
         self.grid_columnconfigure((1, 2), weight=0)
@@ -140,34 +149,34 @@ class App(customtkinter.CTk):
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
         # create sidebar frame with widgets
-        self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
+        self.sidebar_frame = customtkinter.CTkFrame(self, width=110, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
 
         # todo: set the logo
         self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Convolution animation",
-                                                 font=customtkinter.CTkFont(size=20, weight="bold"))
-        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
+                                                 font=customtkinter.CTkFont(size=10, weight="bold"))
+        self.logo_label.grid(row=0, column=0, padx=10, pady=(20, 10))
         self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, command=self.main_button_event, text="Main")
-        self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
+        self.sidebar_button_1.grid(row=1, column=0, padx=10, pady=10)
         self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, command=self.about_button_event,
                                                         text="About")
-        self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
+        self.sidebar_button_2.grid(row=2, column=0, padx=10, pady=10)
         self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.help_button_event, text="Help")
-        self.sidebar_button_3.grid(row=3, column=0, padx=20, pady=10)
+        self.sidebar_button_3.grid(row=3, column=0, padx=10, pady=10)
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=5, column=0, padx=10, pady=(10, 0))
         self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame,
                                                                        values=["System","Light", "Dark"],
                                                                        command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
+        self.appearance_mode_optionemenu.grid(row=6, column=0, padx=10, pady=(10, 10))
         self.scaling_label = customtkinter.CTkLabel(self.sidebar_frame, text="UI Scaling:", anchor="w")
-        self.scaling_label.grid(row=7, column=0, padx=20, pady=(10, 0))
+        self.scaling_label.grid(row=7, column=0, padx=10, pady=(10, 0))
         self.scaling_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame,
                                                                values=["80%", "90%", "100%", "110%", "120%"],
                                                                command=self.change_scaling_event)
         self.scaling_optionemenu.set("100%")
-        self.scaling_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 20))
+        self.scaling_optionemenu.grid(row=8, column=0, padx=10, pady=(10, 20))
         self.main_button_event()
 
 
@@ -247,7 +256,9 @@ class App(customtkinter.CTk):
             # set default (None) values into the rest of attributes
             for attribute, default_value in default_attributes.get(type_1, {}).items():
                 if attribute not in signal_attributes.get(type_1, []):
+                    print(self.signal1.get_type())
                     setattr(self.signal1, attribute, default_value)
+                    print(self.signal1.get_type())
 
             for attribute, default_value in default_attributes.get(type_2, {}).items():
                 if attribute not in signal_attributes.get(type_2, []):
@@ -348,41 +359,45 @@ class App(customtkinter.CTk):
         self.destroy()
         self.signals_type_frame = customtkinter.CTkFrame(self)
         self.modifying_frames.append(self.signals_type_frame)
-        self.signals_type_frame.grid(row=0, column=1, padx=(20, 20), pady=(20, 0), sticky="nsew")
+        self.signals_type_frame.grid(row=0, column=1, padx=(20, 10), pady=(20, 0), sticky="nsew")
         # todo: change the font
-        font = customtkinter.CTkFont(size=20)
-        self.label_type_1 = customtkinter.CTkLabel(master=self.signals_type_frame, text="Choose signal 1", width=200,
-                                                   height=25, font=font)
+        font = customtkinter.CTkFont(size=15)
+        self.label_type_1 = customtkinter.CTkLabel(master=self.signals_type_frame, text="Choose signal 1", width=70,
+                                                   height=10, font=font)
         self.label_type_1.grid(row=0, column=0, padx=20, pady=20)
         optionmenu_var_1 = customtkinter.StringVar(value=self.signal1.get_type())  # set initial value
 
         self.optionmenu_1 = customtkinter.CTkOptionMenu(self.signals_type_frame, dynamic_resizing=False,
                                                         values=["Rectangle", "Triangle", "Sinus", "Cosinus",
-                                                                "Exponential"], width=200, height=50,
+                                                                "Exponential"], width=100, height=20,
                                                         command=self.choose_type_1_event, variable=optionmenu_var_1)
 
         self.optionmenu_1.grid(row=1, column=0, padx=20, pady=(0, 10))
-        self.label_type_2 = customtkinter.CTkLabel(master=self.signals_type_frame, text="Choose signal 2", width=200,
+        self.label_type_2 = customtkinter.CTkLabel(master=self.signals_type_frame, text="Choose signal 2", width=70,
                                                    height=25, font=font)
-        self.label_type_2.grid(row=2, column=0, padx=20, pady=10)
+        self.label_type_2.grid(row=0, column=1, padx=20, pady=10)
         optionmenu_var_2 = customtkinter.StringVar(value=self.signal2.get_type())  # set initial value
 
         self.optionmenu_2 = customtkinter.CTkOptionMenu(self.signals_type_frame, dynamic_resizing=False,
                                                         values=["Rectangle", "Triangle", "Sinus", "Cosinus",
-                                                                "Exponential"], width=200, height=50,
+                                                                "Exponential"], width=100, height=20,
                                                         command=self.choose_type_2_event, variable=optionmenu_var_2)
 
-        self.optionmenu_2.grid(row=3, column=0, padx=20, pady=(5, 10))
+        self.optionmenu_2.grid(row=1, column=1, padx=20, pady=(5, 10))
 
         # create frame of signals parameters choosing
         signal1 = self.signal1.get_type()
         signal2 = self.signal2.get_type()
         self.signals_parameters_frame = customtkinter.CTkFrame(self)
+        self.separator = ttk.Separator(self.signals_parameters_frame, orient="vertical")
+        self.separator.grid(row=0, column=3, rowspan=3, padx=5, sticky="ns")
+        self.separator2 = ttk.Separator(self.signals_parameters_frame, orient="horizontal")
+        self.separator2.grid(row=3, column=0, columnspan=7, sticky="ew", pady=(10,0))
         self.modifying_frames.append(self.signals_parameters_frame)
-        self.signals_parameters_frame.grid(row=1, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew")
+        self.signals_parameters_frame.grid(row=0, column=2, padx=(10, 0), pady=(20, 10), sticky="nsew")
         self.label1 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Enter signal 1 parameters:",
                                              font=font)
-        self.label1.grid(row=0, column=0, columnspan=4, padx=(20, 20), pady=(20, 0))
+        self.label1.grid(row=0, column=0, columnspan=3, pady=(20, 0))
 
         # create input for signal1
         # labels of inputs and its amount depends on the chosen type of signal
@@ -392,69 +407,70 @@ class App(customtkinter.CTk):
             self.label_S = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Shift in time")
             self.label_S.grid(row=1, column=1)
             self.label_W = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Width")
-            self.label_W.grid(row=1, column=2)
+            self.label_W.grid(row=1, column=2, padx=(10,0))
             self.columns_num_1 = 3
         if signal1 == "Sinus" or signal1 == "Cosinus":
             self.label_A = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
-            self.label_A.grid(row=1, column=0, padx=20)
+            self.label_A.grid(row=1, column=0, padx=10)
             self.label_S = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Frequency")
-            self.label_S.grid(row=1, column=1, padx=20)
+            self.label_S.grid(row=1, column=1, padx=10)
             self.label_W = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="phase")
-            self.label_W.grid(row=1, column=2, padx=20)
+            self.label_W.grid(row=1, column=2, padx=(10,0))
             self.columns_num_1 = 3
         if signal1 == "Exponential":
             self.label_A = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
-            self.label_A.grid(row=1, column=0, padx=20)
+            self.label_A.grid(row=1, column=0, padx=10)
             self.label_S = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Decay rate")
-            self.label_S.grid(row=1, column=1, padx=20)
+            self.label_S.grid(row=1, column=1, padx=10)
             self.columns_num_1 = 2
 
         # create input for signal2
         self.label2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Enter signal 2 parameters:",
                                              font=font)
-        self.label2.grid(row=3, column=0, columnspan=4, padx=20, pady=(20, 5))
+        self.label2.grid(row=0, column=4, columnspan=4, pady=(20, 5))
         if signal2 == "Rectangle" or signal2 == "Triangle":
             self.label_A_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
-            self.label_A_2.grid(row=4, column=0, padx=20)
+            self.label_A_2.grid(row=1, column=4, padx=10)
             self.label_S_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Shift in time")
-            self.label_S_2.grid(row=4, column=1, padx=20)
+            self.label_S_2.grid(row=1, column=5, padx=10)
             self.label_W_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Width")
-            self.label_W_2.grid(row=4, column=2, padx=20)
+            self.label_W_2.grid(row=1, column=6, padx=10)
             self.columns_num_2 = 3
         if signal2 == "Sinus" or signal2 == "Cosinus":
             self.label_A_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
-            self.label_A_2.grid(row=4, column=0, padx=20)
+            self.label_A_2.grid(row=1, column=4, padx=10)
             self.label_S_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Frequency")
-            self.label_S_2.grid(row=4, column=1, padx=20)
+            self.label_S_2.grid(row=1, column=5, padx=10)
             self.label_W_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="phase")
-            self.label_W_2.grid(row=4, column=2, padx=20)
+            self.label_W_2.grid(row=1, column=6, padx=10)
             self.columns_num_2 = 3
         if signal2 == "Exponential":
             self.label_A_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
-            self.label_A_2.grid(row=4, column=0, padx=20)
+            self.label_A_2.grid(row=1, column=4, padx=10)
             self.label_S_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Decay rate")
-            self.label_S_2.grid(row=4, column=1, padx=20)
+            self.label_S_2.grid(row=1, column=5, padx=10)
             self.columns_num_2 = 2
         self.entries_1 = []
         self.entries_2 = []
 
         # Create widgets for entries_1
         for i in range(self.columns_num_1):
-            entry = customtkinter.CTkEntry(self.signals_parameters_frame)
-            entry.grid(row=2, column=i, padx=(20, 20), pady=(0, 0), sticky="nsew")
+            entry = customtkinter.CTkEntry(self.signals_parameters_frame)  # Set width to 5
+            entry.grid(row=2, column=i, padx=(5, 5), pady=(0, 0), sticky="nsew")
             self.entries_1.append(entry)
 
         # Create widgets for entries_2
         for i in range(self.columns_num_2):
-            entry = customtkinter.CTkEntry(self.signals_parameters_frame)
-            entry.grid(row=5, column=i, padx=(20, 20), pady=(0, 0), sticky="nsew")
+            entry = customtkinter.CTkEntry(self.signals_parameters_frame)  # Set width to 5
+            entry.grid(row=2, column=i + 4, padx=(5, 5), pady=(0, 0), sticky="nsew")
             self.entries_2.append(entry)
+
         self.current_fg_color = self.entries_2[0].cget('fg_color')
         # Create confirm parameters button
         self.confirm_params_button = customtkinter.CTkButton(self.signals_parameters_frame,
                                                              text="Confirm parameters",
                                                              command=self.on_confirm_params_button_click)
-        self.confirm_params_button.grid(row=6, column=1, pady=(20, 20))
+        self.confirm_params_button.grid(row=3, column=0, columnspan = 7, pady=(20, 20))
 
 
         # create the simulation frame
@@ -462,7 +478,7 @@ class App(customtkinter.CTk):
         self.modifying_frames.append(self.simulation_frame)
         self.simulation_frame.grid_rowconfigure(0, weight=1)  # Allow the graph to expand vertically
         self.simulation_frame.grid_columnconfigure(0, weight=1)  # Allow the graph to expand horizontally
-        self.simulation_frame.grid(row=0, column=2, rowspan=2, padx=(0, 10), pady=(20, 0), sticky="nsew")
+        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx = (20,10), pady=(20, 0), sticky="nsew")
         # top text
         continue_img = Image.open('resources/continue_blue.png')
         continue_photo_img = customtkinter.CTkImage(continue_img)
@@ -496,7 +512,6 @@ class App(customtkinter.CTk):
             return line,
 
         def animate(i):
-            print("Animating frame", i)
             x = np.linspace(0, 2, 1000)
             y = np.sin(2 * np.pi * (x - 0.01 * i))
             line.set_data(x, y)
@@ -519,7 +534,7 @@ class App(customtkinter.CTk):
         )
         self.continueButton.bind("<Enter>", self.on_enter_continue)
         self.continueButton.bind("<Leave>", self.on_leave_continue)
-        self.continueButton.grid(column=0, row=2, pady=(10, 10), sticky="e")
+        self.continueButton.grid(column=1, row=0, pady=(10, 10), sticky="e")
 
         self.pauseButton = customtkinter.CTkButton(
             self.simulation_frame,
@@ -533,7 +548,7 @@ class App(customtkinter.CTk):
         )
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
-        self.pauseButton.grid(row=2, column=1, pady=(10, 10), sticky="w")
+        self.pauseButton.grid(row=1, column=1, pady=(10, 10), sticky="w")
 
         def on_enter_pause(self, event):
             pause_img_hover = Image.open('resources/pause_hover_red.png')
@@ -560,6 +575,21 @@ class App(customtkinter.CTk):
                 self.init()
                 self.anim = FuncAnimation(self.fig, self.animate, frames=200, interval=20, blit=True)
                 self.canvas.draw()
+
+
+
+    # def toggle_pause_animation(self):
+    #     if hasattr(self, 'animation_object') and self.animation_object is not None:
+    #         if self.animation_object.event_source is not None:
+    #             if self.animation_object._running:
+    #                 self.animation_object.event_source.stop()  # Pause the animation
+    #             else:
+    #                 self.animation_object.event_source.start()  # Resume the animation
+    #
+    # def toggle_start_animation(self):
+    #     if not hasattr(self, 'animation_object') or self.animation_object is None:
+    #         # Start the animation
+    #         self.animation_object = AnimatedPlot(self, "tri", "sqr", 1, 2)
     def help_button_event(self):
         self.destroy()
         self.text_about_frame = customtkinter.CTkFrame(self)
