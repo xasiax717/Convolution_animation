@@ -1,63 +1,19 @@
+import tkinter
 import tkinter as tk
 import customtkinter
 from PIL import Image
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.animation import FuncAnimation
 import numpy as np
 import matplotlib.pyplot as plt
-from convolution import convolution, triangle_wave_non_periodic, square_wave_non_periodic
-
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
 
-class AnimatedPlot:
-    def __init__(self, root, signal1_name, signal2_name, param1, param2):
-        self.dt = 0.01
-        self.t = np.arange(-10, 10, self.dt)
 
-        self.signal1 = triangle_wave_non_periodic(self.t, 2)
-        self.signal2 = square_wave_non_periodic(self.t, 2)
+from convolution import triangle_wave_non_periodic, square_wave_non_periodic, convolution
 
-        self.x, self.y = convolution(self.signal1, self.signal2, self.dt)
-
-        # Initialize the plot
-        self.fig, self.ax = plt.subplots(figsize=(5, 5))  # Adjust the figure size here
-        self.line, = self.ax.plot(self.x, self.y)
-
-        # Initialize animation
-        self.anim = FuncAnimation(self.fig, self.update, frames=50, init_func=self.init, blit=True)
-
-        # Add the plot widget to the Tkinter interface using grid
-        self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
-        self.canvas.draw()
-
-        self.anim_running = True
-
-    def toggle_pause_animation(self):
-        if self.anim_running:
-            self.anim.event_source.stop()
-        self.anim_running = not self.anim_running
-
-    def toggle_start_animation(self):
-        if not self.anim_running:
-            self.anim.event_source.start()
-        self.anim_running = not self.anim_running
-
-    def init(self):
-        self.line.set_ydata(np.ma.array(self.x, mask=True))
-        return self.line,
-
-    def update(self, frame):
-        self.line.set_xdata(self.x[:frame * 100])
-        self.line.set_ydata(self.y[:frame * 100])
-        return self.line,
-
-def create_animated_plot(root):
-    return AnimatedPlot(root, "tri", "sqr", 1, 2)
-
-# Create signals classes
 class Signal1:
     def __init__(self):
         self.type = None
@@ -164,8 +120,10 @@ class Signal2:
     def get_rate(self):
         return self.rate
 
-
 class App(customtkinter.CTk):
+
+
+
     def __init__(self):
         super().__init__()
         self.modifying_frames = []
@@ -213,6 +171,7 @@ class App(customtkinter.CTk):
         self.scaling_optionemenu.set("100%")
         self.scaling_optionemenu.grid(row=8, column=0, padx=20, pady=(10, 20))
         self.main_button_event()
+
 
     def change_appearance_mode_event(self, new_appearance_mode: str):  # change color scheme of app
         customtkinter.set_appearance_mode(new_appearance_mode)
@@ -333,7 +292,7 @@ class App(customtkinter.CTk):
         except ValueError:
             return False
 
-    def on_enter_continue(self, event):  # hover image continue button
+    def on_enter_continue(self, event):
         light_image = Image.open('resources/continue_hover_blue.png')
         photo_light_image = customtkinter.CTkImage(light_image)
         self.continueButton.configure(image=photo_light_image)
@@ -361,11 +320,30 @@ class App(customtkinter.CTk):
         for frame in self.modifying_frames:
             frame.destroy()
 
-    def toggle_pause_animation(self):
-        self.animated_plot.toggle_pause_animation()
-
-    def toggle_start_animation(self):
-        self.animated_plot.toggle_start_animation()
+    # def plot_animation(self, signal1_name, signal2_name, param1, param2):
+    #     dt = 0.01
+    #     t = np.arange(-10, 10, dt)
+    #
+    #
+    #     x, y = convolution(self.signal1, self.signal2, dt)
+    #
+    #     # Initialize the plot
+    #     fig, ax = plt.subplots()
+    #     line, = ax.plot(x, y)
+    #
+    #     def update(frame):
+    #         ax.clear()  # Clear the previous frame
+    #         ax.plot(x[:frame * 100], y[:frame * 100])  # Plot the updated data
+    #         return line,
+    #
+    #     anim = FuncAnimation(fig=fig, func=update, frames=50, blit=True)
+    #
+    #
+    #     canvas = FigureCanvasTkAgg(fig, master=self.simulation_frame)
+    #     canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+    #     canvas.draw()
+    #
+    #     return anim
 
     def main_button_event(self):  # frame activated when main is chosen
         # create frame of signals type choosing
@@ -484,7 +462,7 @@ class App(customtkinter.CTk):
         # create the simulation frame
         self.simulation_frame = customtkinter.CTkFrame(self)
         self.modifying_frames.append(self.simulation_frame)
-        self.simulation_frame.grid_rowconfigure(1, weight=1)  # Allow the graph to expand vertically
+        self.simulation_frame.grid_rowconfigure(0, weight=1)  # Allow the graph to expand vertically
         self.simulation_frame.grid_columnconfigure(0, weight=1)  # Allow the graph to expand horizontally
         self.simulation_frame.grid(row=0, column=2, rowspan=2, padx=(0, 10), pady=(20, 0), sticky="nsew")
         # top text
@@ -500,7 +478,37 @@ class App(customtkinter.CTk):
         rest_label = customtkinter.CTkLabel(self.simulation_frame, text="    to start the animation", font=font)
         rest_label.grid(row=0, column=2, padx=(0, 10), pady=(10, 10))
 
-        self.animated_plot = AnimatedPlot(self.simulation_frame, "tri", "sqr", 1, 2)
+        plt.rcParams["figure.figsize"] = [7.00, 3.50]
+        plt.rcParams["figure.autolayout"] = True
+
+        fig = Figure(figsize=(7.00, 3.50))
+        ax = fig.add_subplot(111)
+        ax.set_xlim(0, 2)
+        ax.set_ylim(-1, 1)
+        line, = ax.plot([], [], lw=2)
+
+        canvas = FigureCanvasTkAgg(fig, master=self.simulation_frame)
+        canvas.draw()
+
+        canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+
+        # Define the animation functions
+        def init():
+            line.set_data([], [])
+            return line,
+
+        def animate(i):
+            print("Animating frame", i)
+            x = np.linspace(0, 2, 1000)
+            y = np.sin(2 * np.pi * (x - 0.01 * i))
+            line.set_data(x, y)
+            return line,
+
+        # Execute the animation loop
+        anim = FuncAnimation(fig, animate, init_func=init, frames=200, interval=20, blit=True)
+
+        tkinter.mainloop()
+
         self.continueButton = customtkinter.CTkButton(
             self.simulation_frame,
             text='',
@@ -509,7 +517,7 @@ class App(customtkinter.CTk):
             width=50,
             fg_color='transparent',
             hover=False,
-            command=self.toggle_start_animation
+            #command=self.toggle_start_animation
         )
         self.continueButton.bind("<Enter>", self.on_enter_continue)
         self.continueButton.bind("<Leave>", self.on_leave_continue)
@@ -523,7 +531,7 @@ class App(customtkinter.CTk):
             width=50,
             fg_color='transparent',
             hover=False,
-            command=self.toggle_pause_animation
+            #command=self.toggle_pause_animation
         )
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
@@ -542,6 +550,19 @@ class App(customtkinter.CTk):
             self.pauseButton.configure(fg_color='transparent')
 
 
+
+    # def toggle_pause_animation(self):
+    #     if hasattr(self, 'animation_object') and self.animation_object is not None:
+    #         if self.animation_object.event_source is not None:
+    #             if self.animation_object._running:
+    #                 self.animation_object.event_source.stop()  # Pause the animation
+    #             else:
+    #                 self.animation_object.event_source.start()  # Resume the animation
+    #
+    # def toggle_start_animation(self):
+    #     if not hasattr(self, 'animation_object') or self.animation_object is None:
+    #         # Start the animation
+    #         self.animation_object = AnimatedPlot(self, "tri", "sqr", 1, 2)
     def help_button_event(self):
         self.destroy()
         self.text_about_frame = customtkinter.CTkFrame(self)
@@ -571,15 +592,6 @@ class App(customtkinter.CTk):
         self.textbox.insert("0.0", help_text)
         self.textbox.grid(row=1, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
 
-    # def destroy_frames(self):
-    #     for frame in self.modifying_frames:
-    #         if frame.winfo_exists():  # Check if the frame still exists
-    #             frame.tkinter.Tk.quit()
-    #
-    # def on_closing(self):
-    #     self.destroy_frames()
-    #     super().tkinter.Tk.quit()
-
     def destroy_frames(self):
         for frame in self.modifying_frames:
             if frame.winfo_exists():
@@ -588,6 +600,8 @@ class App(customtkinter.CTk):
     def on_closing(self):
         self.destroy_frames()
         self.quit()
+
+
 
 if __name__ == "__main__":
     app = App()
