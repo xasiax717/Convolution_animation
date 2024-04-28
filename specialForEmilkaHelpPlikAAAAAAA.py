@@ -60,25 +60,38 @@ class AnimatedPlot:
         # sig1 = triangle_wave_non_periodic(self.t, 2)
         # sig2 = square_wave_non_periodic(self.t, 2)
 
+
         self.x, self.y = convolution(sig1, sig2, self.dt)
 
         # Initialize the plot
         self.fig, self.ax = plt.subplots(figsize=(5, 5))
+        self.fig2, self.ax2 = plt.subplots(figsize=(5, 5))
         self.line, = self.ax.plot(self.x, self.y)
+        self.line_moving, = self.ax2.plot([], [], lw=2)
+        self.line_static, = self.ax2.plot([], [], lw=2)
 
         # Initialize animation
-        self.anim = FuncAnimation(self.fig, self.update, frames=50, init_func=self.init, blit=True)
+        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
         self.canvas.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
         self.canvas.draw()
 
+        self.canvas2 = FigureCanvasTkAgg(self.fig2, master=root)
+        self.canvas2.get_tk_widget().grid(row=2, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
+        self.canvas2.draw()
+
+        plt.ylim(-0.2, 4)
+        plt.xlim(-10, 10)
+
         self.anim_running = True
 
     def toggle_pause_animation(self):
         if self.anim_running:
             self.anim.event_source.stop()
+            self.anim2.event_source.stop()
         self.anim_running = not self.anim_running
 
     def toggle_start_animation(self):
@@ -94,6 +107,50 @@ class AnimatedPlot:
         self.line.set_xdata(self.x[:frame * 100])
         self.line.set_ydata(self.y[:frame * 100])
         return self.line,
+
+    def animate(self, i):
+        # Obliczenie środka funkcji prostokątnej w zależności od klatki animacji
+        moving_center = i * self.dt * 100 * 0.5 - 10 #nie mam pojecia co to za liczby ale chyba działa
+
+        if self.signal1.get_type() == "Rectangle":
+            self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
+
+        if self.signal1.get_type() == "Triangle":
+            self.y_moving = triangle_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
+
+        if self.signal1.get_type() == "Exponential":
+            self.y_moving = exponential_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_rate()))
+
+        if self.signal1.get_type() == "Sinus":
+            self.y_moving = sinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), moving_center)
+
+        if self.signal1.get_type() == "Cosinus":
+            self.y_moving = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), moving_center)
+
+
+        if self.signal2.get_type() == "Rectangle":
+            self.y_static = square_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
+
+        if self.signal2.get_type() == "Triangle":
+            self.y_static = triangle_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
+
+        if self.signal2.get_type() == "Exponential":
+            self.y_static = exponential_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_rate()))
+
+        if self.signal2.get_type() == "Sinus":
+            self.y_static = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+
+        if self.signal2.get_type() == "Cosinus":
+            self.y_static = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+
+
+        # Aktualizacja danych funkcji prostokątnej
+        self.line_moving.set_data(self.t, self.y_moving)
+
+        # Aktualizacja danych funkcji trójkątnej
+        self.line_static.set_data(self.t, self.y_static)
+
+        return self.line_moving, self.line_static
 
 # Create signals classes
 class Signal1:
@@ -272,6 +329,7 @@ class App(customtkinter.CTk):
     def choose_type_2_event(self, signalType: str):  # set type of the signal 2
         self.signal2.set_type(signalType)
         self.main_button_event()
+
 
     def on_confirm_params_button_click(
             self):  # check do all the parameters have the required format and then set it into signals classes
@@ -555,7 +613,7 @@ class App(customtkinter.CTk):
         )
         self.continueButton.bind("<Enter>", self.on_enter_continue)
         self.continueButton.bind("<Leave>", self.on_leave_continue)
-        self.continueButton.grid(column=1, row=2,padx=(10,550), pady=(10, 10), sticky="e")
+        self.continueButton.grid(column=1, row=3,padx=(10,550), pady=(10, 10), sticky="e")
 
         self.pauseButton = customtkinter.CTkButton(
             self.simulation_frame,
@@ -569,7 +627,7 @@ class App(customtkinter.CTk):
         )
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
-        self.pauseButton.grid(row=2, column=0,padx=(550,10), pady=(10, 10), sticky="w")
+        self.pauseButton.grid(row=3, column=0,padx=(550,10), pady=(10, 10), sticky="w")
 
         def on_enter_pause(self, event):
             pause_img_hover = Image.open('resources/pause_hover_red.png')
