@@ -64,8 +64,8 @@ class AnimatedPlot:
         self.x, self.y = convolution(sig1, sig2, self.dt)
 
         # Initialize the plot
-        self.fig, self.ax = plt.subplots(figsize=(5, 5))
-        self.fig2, self.ax2 = plt.subplots(figsize=(5, 5))
+        self.fig, self.ax = plt.subplots(figsize=(5,3))
+        self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
         self.line, = self.ax.plot(self.x, self.y)
         self.line_moving, = self.ax2.plot([], [], lw=2)
         self.line_static, = self.ax2.plot([], [], lw=2)
