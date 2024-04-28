@@ -76,11 +76,11 @@ class AnimatedPlot:
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
+        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
         self.canvas.draw()
 
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=root)
-        self.canvas2.get_tk_widget().grid(row=2, column=0, padx=10, pady=10, columnspan=3, sticky="nsew")
+        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
         self.canvas2.draw()
 
         plt.ylim(-0.2, 4)
@@ -97,6 +97,7 @@ class AnimatedPlot:
     def toggle_start_animation(self):
         if not self.anim_running:
             self.anim.event_source.start()
+            self.anim2.event_source.start()
         self.anim_running = not self.anim_running
 
     def init(self):
@@ -530,7 +531,7 @@ class App(customtkinter.CTk):
             self.label_A.grid(row=1, column=0, padx=10)
             self.label_S = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Frequency")
             self.label_S.grid(row=1, column=1, padx=10)
-            self.label_W = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="phase")
+            self.label_W = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Phase")
             self.label_W.grid(row=1, column=2, padx=(10,0))
             self.columns_num_1 = 3
         if signal1 == "Exponential":
