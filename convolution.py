@@ -23,10 +23,10 @@ def sinusoidal_wave(t, A, f, φ):
 def cosinusoidal_wave(t, A, f, phase):
     return A * np.cos(2 * np.pi * f * t + phase)
 
-def convolution(signal1, signal2, dt, lim):
+def convolution(signal1, signal2, dt):
     dt = dt/2
     result = np.convolve(signal1, signal2, mode='full') * dt
-    t_conv = np.arange(-lim*2-1, -lim*2-1 + len(result) * dt, dt)
+    t_conv = np.arange(-10, -10 + len(result) * dt, dt)
     return t_conv, result
 
 def get_convolution_data(signal1_choice, signal2_choice, dt):

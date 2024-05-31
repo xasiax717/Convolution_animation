@@ -17,15 +17,11 @@ customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
 
 class AnimatedPlot:
     def __init__(self, root, signal1, signal2):
-        self.signal1 = signal1
+        self.signal1 = signal1  # Pass the signal1 object
         self.signal2 = signal2
         self.dt = 0.01
+        self.t = np.arange(-10, 10, self.dt)
 
-        xlim2 = 10
-        if self.signal2.get_shift() != 'None':
-            xlim2 = float(self.signal2.get_shift())
-
-        self.t = np.arange(-xlim2 * 2 - 1, xlim2 * 2 + 1, self.dt)
 
         if signal1.get_type() == "Rectangle":
             sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
@@ -60,7 +56,11 @@ class AnimatedPlot:
 
 
 
-        self.x, self.y = convolution(sig1, sig2, self.dt, xlim2)
+        # sig1 = triangle_wave_non_periodic(self.t, 2)
+        # sig2 = square_wave_non_periodic(self.t, 2)
+
+
+        self.x, self.y = convolution(sig1, sig2, self.dt)
 
         # Initialize the plot
         self.fig, self.ax = plt.subplots(figsize=(5,3))
@@ -68,16 +68,6 @@ class AnimatedPlot:
         self.line, = self.ax.plot(self.x, self.y)
         self.line_moving, = self.ax2.plot([], [], lw=2)
         self.line_static, = self.ax2.plot([], [], lw=2)
-
-        self.line, = self.ax.plot(self.x, self.y, label='y(t)', color='dodgerblue')
-        self.line_moving, = self.ax2.plot([], [], lw=2, label='x1(τ)', color='deeppink')
-        self.line_static, = self.ax2.plot([], [], lw=2, label='x2(τ)', color='dodgerblue')
-        self.ax.set_xlabel('t', fontsize=7, labelpad=20)
-        self.ax2.set_xlabel('τ', fontsize=7, labelpad=20)
-        self.ax.legend()
-        self.ax2.legend()
-
-
 
         # Initialize animation
         self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
@@ -94,9 +84,8 @@ class AnimatedPlot:
 
         ylim1 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
         ylim2 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
-
         plt.ylim(-0.05, ylim2)
-        plt.xlim(-xlim2 * 2 - 1, xlim2 * 2 + 1)
+        plt.xlim(-11, 11)
 
         self.anim_running = True
 
@@ -164,7 +153,6 @@ class AnimatedPlot:
         self.line_static.set_data(self.t, self.y_static)
 
         return self.line_moving, self.line_static
-
 
 # Create signals classes
 class Signal1:
@@ -605,7 +593,7 @@ class App(customtkinter.CTk):
         # create the simulation frame
         self.simulation_frame = customtkinter.CTkFrame(self, height=1000)
         self.modifying_frames.append(self.simulation_frame)  # Allow the graph to expand horizontally
-        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx = (20,10), pady=(10, 10), sticky="nsew")
+        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx = (20,10), pady=(20, 0), sticky="nsew")
         # top text
         continue_img = Image.open('resources/continue_blue.png')
         continue_photo_img = customtkinter.CTkImage(continue_img)
