@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+
 import customtkinter
 from PIL import Image
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -13,44 +14,36 @@ from convolution import convolution, triangle_wave, square_wave, exponential_wav
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
+
 class AnimatedPlot:
     def __init__(self, root, signal1, signal2):
         self.signal1 = signal1  # Pass the signal1 object
         self.signal2 = signal2
-        self.dt = 0.005
+        self.dt = 0.01
+        self.t = np.arange(-10, 10, self.dt)
 
-        xlim2 = 10
-        if self.signal2.get_shift() != 'None':
-            xlim2 = float(self.signal2.get_shift())
-
-        self.t = np.arange(-xlim2 * 2 - 1, xlim2 * 2 + 1, self.dt)
 
         if signal1.get_type() == "Rectangle":
-            sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()),
-                               float(self.signal1.get_width()))
+            sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
 
         if signal1.get_type() == "Triangle":
-            sig1 = triangle_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()),
-                                 float(self.signal1.get_width()))
+            sig1 = triangle_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
 
         if signal1.get_type() == "Exponential":
             sig1 = exponential_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_rate()))
 
         if signal1.get_type() == "Sinus":
-            sig1 = sinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()),
-                                   float(self.signal1.get_phase()))
+            sig1 = sinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), float(self.signal1.get_phase()))
 
         if signal1.get_type() == "Cosinus":
-            sig1 = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()),
-                                     float(self.signal1.get_phase()))
+            sig1 = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), float(self.signal1.get_phase()))
+
 
         if signal2.get_type() == "Rectangle":
-            sig2 = square_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()),
-                               float(self.signal2.get_width()))
+            sig2 = square_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
 
         if signal2.get_type() == "Triangle":
-            sig2 = triangle_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()),
-                                 float(self.signal2.get_width()))
+            sig2 = triangle_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
 
         if signal2.get_type() == "Exponential":
             sig2 = exponential_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_rate()))
@@ -63,55 +56,36 @@ class AnimatedPlot:
 
 
 
-        self.x, self.y = convolution(sig1, sig2, self.dt, xlim2)
+        # sig1 = triangle_wave_non_periodic(self.t, 2)
+        # sig2 = square_wave_non_periodic(self.t, 2)
+
+
+        self.x, self.y = convolution(sig1, sig2, self.dt)
 
         # Initialize the plot
         self.fig, self.ax = plt.subplots(figsize=(5,3))
         self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
-        self.line, = self.ax.plot(self.x, self.y, label='y(t)', color='dodgerblue')
-        self.line_moving, = self.ax2.plot([], [], lw=2, label='x1(τ)', color='deeppink')
-        self.line_static, = self.ax2.plot([], [], lw=2, label='x2(τ)', color='dodgerblue')
-        self.ax.set_xlabel('t', fontsize=7, labelpad=20)
-        self.ax2.set_xlabel('τ', fontsize=7, labelpad=20)
-        self.ax.legend()
-        self.ax2.legend()
-
-        # Add legend to the first plot
-        self.ax.legend()
-
-        self.ax.set_xlim(self.t[0], self.t[-1])
-        self.ax2.set_xlim(self.t[0], self.t[-1])
-        ylim = max(float(self.signal2.get_amplitude()), float(self.signal1.get_amplitude())) + 0.2
-        self.ax.set_ylim(-0.05, ylim)
-        self.ax2.set_ylim(-0.05, ylim)
-
-        # Move spines to the corner
-        for axis in (self.ax, self.ax2):
-            axis.spines['left'].set_position('zero')
-            axis.spines['bottom'].set_position('zero')
-            axis.spines['right'].set_color('none')
-            axis.spines['top'].set_color('none')
-            axis.xaxis.set_ticks_position('bottom')
-            axis.yaxis.set_ticks_position('left')
+        self.line, = self.ax.plot(self.x, self.y)
+        self.line_moving, = self.ax2.plot([], [], lw=2)
+        self.line_static, = self.ax2.plot([], [], lw=2)
 
         # Initialize animation
-        self.anim = FuncAnimation(self.fig, self.update, frames=1000, init_func=self.init, blit=True, interval=50)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=1000, init_func=self.init, blit=True, interval=50)
+        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True, interval=50)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=5, columnspan = 2, sticky="nsew")
+        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
         self.canvas.draw()
 
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=root)
-        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=5, columnspan = 2, sticky="nsew")
+        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
         self.canvas2.draw()
 
         ylim1 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
         ylim2 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
-
         plt.ylim(-0.05, ylim2)
-        plt.xlim(-xlim2 * 2 - 1, xlim2 * 2 + 1)
+        plt.xlim(-11, 11)
 
         self.anim_running = True
 
@@ -138,48 +112,39 @@ class AnimatedPlot:
 
     def animate(self, i):
         # Obliczenie środka funkcji prostokątnej w zależności od klatki animacji
-        moving_center = i * self.dt * 100 * 0.5 - int(self.signal2.get_shift())*2  # nie mam pojecia co to za liczby ale chyba działa
-
+        moving_center = i * self.dt * 100 * 0.5 - 10 #nie mam pojecia co to za liczby ale chyba działa
 
         if self.signal1.get_type() == "Rectangle":
-            self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center,
-                                        float(self.signal1.get_width()))
+            self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
 
         if self.signal1.get_type() == "Triangle":
-            self.y_moving = triangle_wave(self.t, float(self.signal1.get_amplitude()), moving_center,
-                                          float(self.signal1.get_width()))
+            self.y_moving = triangle_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
 
         if self.signal1.get_type() == "Exponential":
-            self.y_moving = exponential_wave(self.t, float(self.signal1.get_amplitude()),
-                                             float(self.signal1.get_rate()))
+            self.y_moving = exponential_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_rate()))
 
         if self.signal1.get_type() == "Sinus":
-            self.y_moving = sinusoidal_wave(self.t, float(self.signal1.get_amplitude()),
-                                            float(self.signal1.get_frequency()), moving_center)
+            self.y_moving = sinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), moving_center)
 
         if self.signal1.get_type() == "Cosinus":
-            self.y_moving = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()),
-                                              float(self.signal1.get_frequency()), moving_center)
+            self.y_moving = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), moving_center)
+
 
         if self.signal2.get_type() == "Rectangle":
-            self.y_static = square_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()),
-                                        float(self.signal2.get_width()))
+            self.y_static = square_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
 
         if self.signal2.get_type() == "Triangle":
-            self.y_static = triangle_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()),
-                                          float(self.signal2.get_width()))
+            self.y_static = triangle_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
 
         if self.signal2.get_type() == "Exponential":
-            self.y_static = exponential_wave(self.t, float(self.signal2.get_amplitude()),
-                                             float(self.signal2.get_rate()))
+            self.y_static = exponential_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_rate()))
 
         if self.signal2.get_type() == "Sinus":
-            self.y_static = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()),
-                                            float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+            self.y_static = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
 
         if self.signal2.get_type() == "Cosinus":
-            self.y_static = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()),
-                                              float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+            self.y_static = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+
 
         # Aktualizacja danych funkcji prostokątnej
         self.line_moving.set_data(self.t, self.y_moving)
@@ -188,7 +153,6 @@ class AnimatedPlot:
         self.line_static.set_data(self.t, self.y_static)
 
         return self.line_moving, self.line_static
-
 
 # Create signals classes
 class Signal1:
@@ -629,7 +593,7 @@ class App(customtkinter.CTk):
         # create the simulation frame
         self.simulation_frame = customtkinter.CTkFrame(self, height=1000)
         self.modifying_frames.append(self.simulation_frame)  # Allow the graph to expand horizontally
-        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx = (20,10), pady=(10, 10), sticky="nsew")
+        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx = (20,10), pady=(20, 0), sticky="nsew")
         # top text
         continue_img = Image.open('resources/continue_blue.png')
         continue_photo_img = customtkinter.CTkImage(continue_img)
