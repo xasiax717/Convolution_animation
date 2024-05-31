@@ -33,10 +33,10 @@ class AnimatedPlot:
             sig1 = exponential_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_rate()))
 
         if signal1.get_type() == "Sinus":
-            sig1 = sinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), float(self.signal1.get_phase()))
+            sig1 = sinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), float(self.signal1.get_shift()))
 
         if signal1.get_type() == "Cosinus":
-            sig1 = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), float(self.signal1.get_phase()))
+            sig1 = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), float(self.signal1.get_shift()))
 
 
         if signal2.get_type() == "Rectangle":
@@ -49,10 +49,10 @@ class AnimatedPlot:
             sig2 = exponential_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_rate()))
 
         if signal2.get_type() == "Sinus":
-            sig2 = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+            sig2 = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
         if signal2.get_type() == "Cosinus":
-            sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+            sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
 
 
@@ -167,10 +167,10 @@ class AnimatedPlot:
             self.y_static = exponential_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_rate()))
 
         if self.signal2.get_type() == "Sinus":
-            self.y_static = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+            self.y_static = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
         if self.signal2.get_type() == "Cosinus":
-            self.y_static = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+            self.y_static = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
 
         # Aktualizacja danych funkcji prostokątnej
@@ -187,7 +187,6 @@ class Signal1:
         self.type = "Rectangle"
         self.type = None
         self.amplitude = None
-        self.phase = None
         self.frequency = None
         self.shift = None
         self.width = None
@@ -199,8 +198,6 @@ class Signal1:
     def set_amplitude(self, amplitude):
         self.amplitude = amplitude
 
-    def set_phase(self, phase):
-        self.phase = phase
 
     def set_frequency(self, frequency):
         self.frequency = frequency
@@ -223,8 +220,6 @@ class Signal1:
     def get_frequency(self):
         return self.frequency
 
-    def get_phase(self):
-        return self.phase
 
     def get_shift(self):
         return self.shift
@@ -342,8 +337,8 @@ class App(customtkinter.CTk):
             signal_attributes = {
                 "Rectangle": ["amplitude", "shift", "width"],
                 "Triangle": ["amplitude", "shift", "width"],
-                "Sinus": ["amplitude", "frequency", "phase"],
-                "Cosinus": ["amplitude", "frequency", "phase"],
+                "Sinus": ["amplitude", "frequency", "shift"],
+                "Cosinus": ["amplitude", "frequency", "shift"],
                 "Exponential": ["amplitude", "rate"]
             }
 
@@ -358,8 +353,8 @@ class App(customtkinter.CTk):
                 getattr(self.signal2, f"set_{attribute}")(value)
 
             default_attributes = {
-                "Rectangle": {"frequency": None, "phase": None, "rate": None},
-                "Triangle": {"frequency": None, "phase": None, "rate": None},
+                "Rectangle": {"frequency": None, "shift": None, "rate": None},
+                "Triangle": {"frequency": None, "shift": None, "rate": None},
                 "Sinus": {"shift": None, "width": None},
                 "Cosinus": {"shift": None, "width": None},
                 "Exponential": {"shift": None, "width": None}
