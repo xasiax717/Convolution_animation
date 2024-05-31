@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-
 import customtkinter
 from PIL import Image
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -69,6 +68,8 @@ class AnimatedPlot:
         self.line, = self.ax.plot(self.x, self.y)
         self.line_moving, = self.ax2.plot([], [], lw=2)
         self.line_static, = self.ax2.plot([], [], lw=2)
+        self.ax.set_xlabel('t')
+        self.ax2.set_xlabel('tau')
 
         # Initialize animation
         self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
