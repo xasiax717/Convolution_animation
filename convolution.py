@@ -14,8 +14,8 @@ def square_wave(t, amplitude, shift, width):
 def triangle_wave(t, amplitude, shift, width):
     return np.where(np.abs(t-shift)< width / 2, amplitude*np.abs((t / (width / 2)) % 2 - 1), 0)
 
-def exponential_wave(t, tau):
-    return np.where(t>0, np.exp(-t / tau), 0)
+def exponential_wave(t, amp, tau):
+    return np.where(t>0, amp*np.exp(-t / tau), 0)
 
 def sinusoidal_wave(t, A, f, φ):
     return A * np.sin(2 * np.pi * f * t + φ)

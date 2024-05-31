@@ -70,8 +70,8 @@ class AnimatedPlot:
         self.line_static, = self.ax2.plot([], [], lw=2)
 
         # Initialize animation
-        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True, interval=50)
+        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=1000)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True, interval=1000)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
@@ -82,8 +82,9 @@ class AnimatedPlot:
         self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
         self.canvas2.draw()
 
-        ylim = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
-        plt.ylim(-0.05, ylim)
+        ylim1 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
+        ylim2 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
+        plt.ylim(-0.05, ylim2)
         plt.xlim(-11, 11)
 
         self.anim_running = True
