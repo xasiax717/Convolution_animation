@@ -20,7 +20,12 @@ class AnimatedPlot:
         self.signal1 = signal1  # Pass the signal1 object
         self.signal2 = signal2
         self.dt = 0.01
-        self.t = np.arange(-10, 10, self.dt)
+
+        xlim2 = 10
+        if self.signal2.get_shift() != 'None':
+            xlim2 = int(self.signal2.get_shift())
+
+        self.t = np.arange(-xlim2 * 2 + 1, xlim2 * 2 + 1, self.dt)
 
 
         if signal1.get_type() == "Rectangle":
@@ -56,11 +61,7 @@ class AnimatedPlot:
 
 
 
-        # sig1 = triangle_wave_non_periodic(self.t, 2)
-        # sig2 = square_wave_non_periodic(self.t, 2)
-
-
-        self.x, self.y = convolution(sig1, sig2, self.dt)
+        self.x, self.y = convolution(sig1, sig2, self.dt, xlim2)
 
         # Initialize the plot
         self.fig, self.ax = plt.subplots(figsize=(5,3))
@@ -84,8 +85,9 @@ class AnimatedPlot:
 
         ylim1 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
         ylim2 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
+        
         plt.ylim(-0.05, ylim2)
-        plt.xlim(-11, 11)
+        plt.xlim(-xlim2*2-1, xlim2*2+1)
 
         self.anim_running = True
 
