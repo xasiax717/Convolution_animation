@@ -70,8 +70,8 @@ class AnimatedPlot:
         self.line_static, = self.ax2.plot([], [], lw=2)
 
         # Initialize animation
-        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=1000)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True, interval=1000)
+        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True, interval=50)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
