@@ -87,9 +87,31 @@ class AnimatedPlot:
         self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
         self.canvas2.draw()
 
-        ylim1 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
-        ylim2 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
-        plt.ylim(-0.05, ylim2)
+        amp1 = int(self.signal1.get_amplitude())
+        amp2 = int(self.signal2.get_amplitude())
+        if self.signal1.get_type() == "Sinus" and self.signal2.get_type() != "Sinus":
+            ylim1 = int(min(-amp1, amp2)) - 0.2
+            ylim2 = int(max(amp1, amp2)) + 0.2
+        elif self.signal1.get_type() != "Sinus" and self.signal2.get_type() == "Sinus":
+            ylim1 = int(min(amp1, -amp2)) - 0.2
+            ylim2 = int(max(amp1, amp2)) + 0.2
+        elif self.signal1.get_type() == "Sinus" and self.signal2.get_type() == "Sinus":
+            ylim1 = int(min(-amp1, -amp2)) - 0.2
+            ylim2 = int(max(amp1, amp2)) + 0.2
+        elif amp1 > 0 and amp2 > 0:
+            ylim1 = 0
+            ylim2 = int(max(amp1, amp2)) + 0.2
+        elif amp1 < 0 and amp2 < 0:
+            ylim1 = int(min(amp1, amp2)) - 0.2
+            ylim2 = 0
+        elif amp1 < 0 < amp2:
+            ylim1 = amp1 - 0.2
+            ylim2 = amp2 + 0.2
+        else:
+            ylim1 = amp2 - 0.2
+            ylim2 = amp1 + 0.2
+        plt.ylim(ylim1, ylim2)
+        # xlim1 =
         plt.xlim(-11, 11)
 
         self.anim_running = True
@@ -214,67 +236,13 @@ class Signal1:
         return self.rate
 
 
-class Signal2:
-    def __init__(self):
-        super().__init__()
-        self.type = None
-        self.amplitude = None
-        self.phase = None
-        self.frequency = None
-        self.shift = None
-        self.width = None
-        self.rate = None
-
-    def set_type(self, type):
-        self.type = type
-
-    def set_amplitude(self, amplitude):
-        self.amplitude = amplitude
-
-    def set_phase(self, phase):
-        self.phase = phase
-
-    def set_frequency(self, frequency):
-        self.frequency = frequency
-
-    def set_shift(self, shift):
-        self.shift = shift
-
-    def set_width(self, width):
-        self.width = width
-
-    def set_rate(self, rate):
-        self.rate = rate
-
-    def get_type(self):
-        return self.type
-
-    def get_amplitude(self):
-        return self.amplitude
-
-    def get_frequency(self):
-        return self.frequency
-
-    def get_phase(self):
-        return self.phase
-
-    def get_shift(self):
-        return self.shift
-
-    def get_width(self):
-        return self.width
-
-    def get_rate(self):
-        return self.rate
-
-
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.modifying_frames = []
         self.signal1 = Signal1()
         self.signal1.set_type("Rectangle")
-        self.signal2 = Signal2()
+        self.signal2 = Signal1()
         self.signal2.set_type("Rectangle")
 
         # application window, can change size if need
