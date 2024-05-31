@@ -13,7 +13,6 @@ from convolution import convolution, triangle_wave, square_wave, exponential_wav
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
-
 class AnimatedPlot:
     def __init__(self, root, signal1, signal2):
         self.signal1 = signal1  # Pass the signal1 object
@@ -25,7 +24,6 @@ class AnimatedPlot:
             xlim2 = int(self.signal2.get_shift())
 
         self.t = np.arange(-xlim2 * 2 + 1, xlim2 * 2 + 1, self.dt)
-
 
         if signal1.get_type() == "Rectangle":
             sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
@@ -65,28 +63,33 @@ class AnimatedPlot:
         # Initialize the plot
         self.fig, self.ax = plt.subplots(figsize=(5,3))
         self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
-        self.line, = self.ax.plot(self.x, self.y)
-        self.line_moving, = self.ax2.plot([], [], lw=2)
-        self.line_static, = self.ax2.plot([], [], lw=2)
-        self.ax.set_xlabel('t')
-        self.ax2.set_xlabel('tau')
+        self.line, = self.ax.plot(self.x, self.y, label='y(t)', color='dodgerblue')
+        self.line_moving, = self.ax2.plot([], [], lw=2, label='x1(τ)', color='deeppink')
+        self.line_static, = self.ax2.plot([], [], lw=2, label='x2(τ)', color='dodgerblue')
+        self.ax.set_xlabel('t', fontsize=7)
+        self.ax2.set_xlabel('τ', fontsize=7)
+        self.ax.legend()
+        self.ax2.legend()
+
+        # Add legend to the first plot
+        self.ax.legend()
 
         # Initialize animation
-        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True, interval=50)
+        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=100)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True, interval=100)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
+        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=0, columnspan = 2, sticky="nsew")
         self.canvas.draw()
 
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=root)
-        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
+        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=0, columnspan = 2, sticky="nsew")
         self.canvas2.draw()
 
         ylim1 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
         ylim2 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
-        
+
         plt.ylim(-0.05, ylim2)
         plt.xlim(-xlim2*2-1, xlim2*2+1)
 
@@ -156,6 +159,7 @@ class AnimatedPlot:
         self.line_static.set_data(self.t, self.y_static)
 
         return self.line_moving, self.line_static
+
 
 # Create signals classes
 class Signal1:
@@ -596,7 +600,7 @@ class App(customtkinter.CTk):
         # create the simulation frame
         self.simulation_frame = customtkinter.CTkFrame(self, height=1000)
         self.modifying_frames.append(self.simulation_frame)  # Allow the graph to expand horizontally
-        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx = (20,10), pady=(20, 0), sticky="nsew")
+        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx = (20,10), pady=(10, 10), sticky="nsew")
         # top text
         continue_img = Image.open('resources/continue_blue.png')
         continue_photo_img = customtkinter.CTkImage(continue_img)
