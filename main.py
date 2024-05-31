@@ -10,10 +10,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from convolution import convolution, triangle_wave, square_wave, exponential_wave, sinusoidal_wave, cosinusoidal_wave
 
+
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
-
-
 class AnimatedPlot:
     def __init__(self, root, signal1, signal2):
         self.signal1 = signal1  # Pass the signal1 object
@@ -57,23 +56,28 @@ class AnimatedPlot:
             sig2 = exponential_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_rate()))
 
         if signal2.get_type() == "Sinus":
-            sig2 = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()),
-                                   float(self.signal2.get_phase()))
+            sig2 = sinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
 
         if signal2.get_type() == "Cosinus":
-            sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()),
-                                     float(self.signal2.get_phase()))
+            sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_phase()))
+
+
 
         self.x, self.y = convolution(sig1, sig2, self.dt, xlim2)
 
         # Initialize the plot
-        self.fig, self.ax = plt.subplots(figsize=(5, 3.5))
-        self.fig2, self.ax2 = plt.subplots(figsize=(5, 3.5))
-        self.line, = self.ax.plot(self.x, self.y)
-        self.line_moving, = self.ax2.plot([], [], lw=2)
-        self.line_static, = self.ax2.plot([], [], lw=2)
-        self.ax.set_xlabel('t')
-        self.ax2.set_xlabel('tau')
+        self.fig, self.ax = plt.subplots(figsize=(5,3))
+        self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
+        self.line, = self.ax.plot(self.x, self.y, label='y(t)', color='dodgerblue')
+        self.line_moving, = self.ax2.plot([], [], lw=2, label='x1(τ)', color='deeppink')
+        self.line_static, = self.ax2.plot([], [], lw=2, label='x2(τ)', color='dodgerblue')
+        self.ax.set_xlabel('t', fontsize=7, labelpad=20)
+        self.ax2.set_xlabel('τ', fontsize=7, labelpad=20)
+        self.ax.legend()
+        self.ax2.legend()
+
+        # Add legend to the first plot
+        self.ax.legend()
 
         # Initialize animation
         self.anim = FuncAnimation(self.fig, self.update, frames=1000, init_func=self.init, blit=True, interval=50)
@@ -81,11 +85,11 @@ class AnimatedPlot:
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=10, columnspan=2, sticky="nsew")
+        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=5, columnspan = 2, sticky="nsew")
         self.canvas.draw()
 
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=root)
-        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan=2, sticky="nsew")
+        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=5, columnspan = 2, sticky="nsew")
         self.canvas2.draw()
 
         ylim1 = int(max(self.signal2.get_amplitude(), self.signal1.get_amplitude())) + 0.2
@@ -322,7 +326,7 @@ class App(customtkinter.CTk):
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
         self.appearance_mode_label.grid(row=5, column=0, padx=10, pady=(10, 0))
         self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame,
-                                                                       values=["System", "Light", "Dark"],
+                                                                       values=["System","Light", "Dark"],
                                                                        command=self.change_appearance_mode_event)
         self.appearance_mode_optionemenu.grid(row=6, column=0, padx=10, pady=(10, 10))
         self.scaling_label = customtkinter.CTkLabel(self.sidebar_frame, text="UI Scaling:", anchor="w")
@@ -348,6 +352,7 @@ class App(customtkinter.CTk):
     def choose_type_2_event(self, signalType: str):  # set type of the signal 2
         self.signal2.set_type(signalType)
         self.main_button_event()
+
 
     def on_confirm_params_button_click(
             self):  # check do all the parameters have the required format and then set it into signals classes
@@ -526,7 +531,7 @@ class App(customtkinter.CTk):
         self.separator = ttk.Separator(self.signals_parameters_frame, orient="vertical")
         self.separator.grid(row=0, column=3, rowspan=3, padx=5, sticky="ns")
         self.separator2 = ttk.Separator(self.signals_parameters_frame, orient="horizontal")
-        self.separator2.grid(row=3, column=0, columnspan=7, sticky="ew", pady=(10, 0))
+        self.separator2.grid(row=3, column=0, columnspan=7, sticky="ew", pady=(10,0))
         self.modifying_frames.append(self.signals_parameters_frame)
         self.signals_parameters_frame.grid(row=0, column=2, padx=(10, 0), pady=(20, 10), sticky="nsew")
         self.label1 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Enter signal 1 parameters:",
@@ -541,7 +546,7 @@ class App(customtkinter.CTk):
             self.label_S = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Shift in time")
             self.label_S.grid(row=1, column=1)
             self.label_W = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Width")
-            self.label_W.grid(row=1, column=2, padx=(10, 0))
+            self.label_W.grid(row=1, column=2, padx=(10,0))
             self.columns_num_1 = 3
         if signal1 == "Sinus" or signal1 == "Cosinus":
             self.label_A = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
@@ -549,7 +554,7 @@ class App(customtkinter.CTk):
             self.label_S = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Frequency")
             self.label_S.grid(row=1, column=1, padx=10)
             self.label_W = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Phase")
-            self.label_W.grid(row=1, column=2, padx=(10, 0))
+            self.label_W.grid(row=1, column=2, padx=(10,0))
             self.columns_num_1 = 3
         if signal1 == "Exponential":
             self.label_A = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
@@ -603,17 +608,19 @@ class App(customtkinter.CTk):
         self.confirm_params_button = customtkinter.CTkButton(self.signals_parameters_frame,
                                                              text="Confirm parameters",
                                                              command=self.on_confirm_params_button_click)
-        self.confirm_params_button.grid(row=3, column=0, columnspan=7, pady=(20, 20))
+        self.confirm_params_button.grid(row=3, column=0, columnspan = 7, pady=(20, 20))
+
 
         # create the simulation frame
         self.simulation_frame = customtkinter.CTkFrame(self, height=1000)
         self.modifying_frames.append(self.simulation_frame)  # Allow the graph to expand horizontally
-        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx=(20, 10), pady=(20, 0), sticky="nsew")
+        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx = (20,10), pady=(10, 10), sticky="nsew")
         # top text
         continue_img = Image.open('resources/continue_blue.png')
         continue_photo_img = customtkinter.CTkImage(continue_img)
         pause_img = Image.open('resources/pause_50.png')
         pause_photo_img = customtkinter.CTkImage(pause_img)
+
 
         # self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
 
@@ -629,7 +636,7 @@ class App(customtkinter.CTk):
         )
         self.continueButton.bind("<Enter>", self.on_enter_continue)
         self.continueButton.bind("<Leave>", self.on_leave_continue)
-        self.continueButton.grid(column=1, row=3, padx=(10, 550), pady=(10, 10), sticky="e")
+        self.continueButton.grid(column=1, row=3,padx=(10,550), pady=(10, 10), sticky="e")
 
         self.pauseButton = customtkinter.CTkButton(
             self.simulation_frame,
@@ -643,7 +650,7 @@ class App(customtkinter.CTk):
         )
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
-        self.pauseButton.grid(row=3, column=0, padx=(550, 10), pady=(10, 10), sticky="w")
+        self.pauseButton.grid(row=3, column=0,padx=(550,10), pady=(10, 10), sticky="w")
 
         def on_enter_pause(self, event):
             pause_img_hover = Image.open('resources/pause_hover_red.png')
@@ -656,6 +663,7 @@ class App(customtkinter.CTk):
             pause_photo_img = customtkinter.CTkImage(pause_img)
             self.pauseButton.configure(image=pause_photo_img)
             self.pauseButton.configure(fg_color='transparent')
+
 
     def help_button_event(self):
         self.destroy()
@@ -703,7 +711,6 @@ class App(customtkinter.CTk):
     def on_closing(self):
         self.destroy_frames()
         self.quit()
-
 
 if __name__ == "__main__":
     app = App()
