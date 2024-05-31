@@ -79,6 +79,21 @@ class AnimatedPlot:
         # Add legend to the first plot
         self.ax.legend()
 
+        self.ax.set_xlim(self.t[0], self.t[-1])
+        self.ax2.set_xlim(self.t[0], self.t[-1])
+        ylim = max(float(self.signal2.get_amplitude()), float(self.signal1.get_amplitude())) + 0.2
+        self.ax.set_ylim(-0.05, ylim)
+        self.ax2.set_ylim(-0.05, ylim)
+
+        # Move spines to the corner
+        for axis in (self.ax, self.ax2):
+            axis.spines['left'].set_position('zero')
+            axis.spines['bottom'].set_position('zero')
+            axis.spines['right'].set_color('none')
+            axis.spines['top'].set_color('none')
+            axis.xaxis.set_ticks_position('bottom')
+            axis.yaxis.set_ticks_position('left')
+
         # Initialize animation
         self.anim = FuncAnimation(self.fig, self.update, frames=1000, init_func=self.init, blit=True, interval=50)
         self.anim2 = FuncAnimation(self.fig2, self.animate, frames=1000, init_func=self.init, blit=True, interval=50)
