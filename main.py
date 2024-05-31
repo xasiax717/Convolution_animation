@@ -68,7 +68,12 @@ class AnimatedPlot:
         self.line, = self.ax.plot(self.x, self.y)
         self.line_moving, = self.ax2.plot([], [], lw=2)
         self.line_static, = self.ax2.plot([], [], lw=2)
-
+        for axis in (self.ax, self.ax2):
+            axis.spines['left'].set_position('zero')
+            axis.spines['bottom'].set_position('zero')
+            axis.spines['left'].set_color('black')
+            axis.spines['right'].set_color('None')
+            axis.spines['top'].set_color('None')
         # Initialize animation
         self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
         self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True, interval=50)
