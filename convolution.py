@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy import convolve
+
 
 # "Rectangle": ["amplitude", "shift", "width"],
 # "Triangle": ["amplitude", "shift", "width"],
@@ -7,12 +9,11 @@ import matplotlib.pyplot as plt
 # "Cosinus": ["amplitude", "frequency", "phase"],
 # "Exponential": ["amplitude", "rate"]
 
-
 def square_wave(t, amplitude, shift, width):
-    return np.where(np.abs(t - shift) < width / 2, amplitude, 0)
+    return np.where(np.abs(t + shift) < width / 2, amplitude, 0)
 
 def triangle_wave(t, amplitude, shift, width):
-    return np.where(np.abs(t-shift)< width / 2, amplitude*np.abs((t / (width / 2)) % 2 - 1), 0)
+    return np.where(np.abs(t + shift) < width / 2, amplitude*np.abs(((t-shift) / (width / 2)) % 2 - 1), 0)
 
 def exponential_wave(t, amp, tau):
     return np.where(t>0, amp*np.exp(-t / tau), 0)
@@ -24,10 +25,12 @@ def cosinusoidal_wave(t, A, f, phase):
     return A * np.cos(2 * np.pi * f * t + phase)
 
 def convolution(signal1, signal2, dt):
-    dt = dt/2
-    result = np.convolve(signal1, signal2, mode='full') * dt
-    t_conv = np.arange(-10, -10 + len(result) * dt, dt)
-    return t_conv, result
+    result = convolve(signal1, signal2, mode='full') * dt
+    result_len = len(result)
+    half_len = result_len // 2
+    t_conv = np.arange(-half_len, half_len + 1) * dt
+    x_lim = half_len * dt
+    return t_conv, result, x_lim
 
 def get_convolution_data(signal1_choice, signal2_choice, dt):
     t = np.arange(-10, 10, dt)

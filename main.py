@@ -3,12 +3,13 @@ from tkinter import ttk
 
 import customtkinter
 from PIL import Image
+from matplotlib import animation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.animation import FuncAnimation
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
+from PIL import Image
 from convolution import convolution, triangle_wave, square_wave, exponential_wave, sinusoidal_wave, cosinusoidal_wave
 
 
@@ -17,10 +18,12 @@ customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
 
 class AnimatedPlot:
     def __init__(self, root, signal1, signal2):
-        self.signal1 = signal1  # Pass the signal1 object
+        self.signal1 = signal1
         self.signal2 = signal2
         self.dt = 0.01
-        self.t = np.arange(-10, 10, self.dt)
+
+        xmax = max(abs(int(signal1.get_shift())) + abs(int(signal1.get_width())) / 2, abs(int(signal2.get_shift())) + abs(int(signal1.get_width())) / 2)
+        self.t = np.arange(-xmax, xmax, self.dt)
 
 
         if signal1.get_type() == "Rectangle":
@@ -54,29 +57,32 @@ class AnimatedPlot:
         if signal2.get_type() == "Cosinus":
             sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
-
-
-        # sig1 = triangle_wave_non_periodic(self.t, 2)
-        # sig2 = square_wave_non_periodic(self.t, 2)
-
-
-        self.x, self.y = convolution(sig1, sig2, self.dt)
+        self.x, self.y, self.xlim = convolution(sig1, sig2, self.dt)
+        print(self.xlim)
+        self.xmax = max(abs(int(signal1.get_shift())) + abs(int(signal1.get_width())) / 2, abs(int(signal2.get_shift())) + abs(int(signal1.get_width())) / 2)
+        self.t = np.arange(-self.xmax, self.xmax, self.dt)
 
         # Initialize the plot
         self.fig, self.ax = plt.subplots(figsize=(5,3))
-        self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
         self.line, = self.ax.plot(self.x, self.y)
+        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=100)
+
+        self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
         self.line_moving, = self.ax2.plot([], [], lw=2)
         self.line_static, = self.ax2.plot([], [], lw=2)
+
         for axis in (self.ax, self.ax2):
             axis.spines['left'].set_position('zero')
             axis.spines['bottom'].set_position('zero')
             axis.spines['left'].set_color('black')
             axis.spines['right'].set_color('None')
             axis.spines['top'].set_color('None')
-        # Initialize animation
-        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=100, init_func=self.init, blit=True, interval=50)
+
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=200, init_func=self.init, blit=True, interval=50)
+
+        # ani = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
+        # writer = animation.PillowWriter(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+        # ani.save('scatter.gif', writer=writer)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
@@ -111,10 +117,29 @@ class AnimatedPlot:
             ylim1 = amp2 - 0.2
             ylim2 = amp1 + 0.2
         plt.ylim(ylim1, ylim2)
-        # xlim1 =
-        plt.xlim(-11, 11)
+
+        plt.xlim(-self.xmax, self.xmax)
 
         self.anim_running = True
+
+    def save_animation_as_gif(self, filename, fps=20):
+        frames = []
+
+        for i in range(100):
+            self.update(i)
+            self.animate(i)
+            self.fig.canvas.draw()
+            self.fig2.canvas.draw()
+
+            image1 = Image.frombuffer('RGBA', self.fig.canvas.get_width_height(), self.fig.canvas.buffer_rgba())
+            image2 = Image.frombuffer('RGBA', self.fig2.canvas.get_width_height(), self.fig2.canvas.buffer_rgba())
+            combined_image = Image.new('RGBA', (image1.width + image2.width, max(image1.height, image2.height)))
+            combined_image.paste(image1, (0, 0))
+            combined_image.paste(image2, (image1.width, 0))
+            frames.append(combined_image)
+
+        frames[0].save(filename, save_all=True, append_images=frames[1:], optimize=False, duration=1000 / fps, loop=0)
+
 
     def toggle_pause_animation(self):
         if self.anim_running:
@@ -129,17 +154,17 @@ class AnimatedPlot:
         self.anim_running = not self.anim_running
 
     def init(self):
-        self.line.set_ydata(np.ma.array(self.x, mask=True))
+        self.line.set_data([], [])
         return self.line,
 
     def update(self, frame):
-        self.line.set_xdata(self.x[:frame * 100])
-        self.line.set_ydata(self.y[:frame * 100])
+        self.line.set_xdata(self.x[:frame * 200])
+        self.line.set_ydata(self.y[:frame * 200])
         return self.line,
 
     def animate(self, i):
         # Obliczenie środka funkcji prostokątnej w zależności od klatki animacji
-        moving_center = i * self.dt * 100 * 0.5 - 10 #nie mam pojecia co to za liczby ale chyba działa
+        moving_center = i * self.dt * 100 * 0.5 - self.xmax #nie mam pojecia co to za liczby ale chyba działa
 
         if self.signal1.get_type() == "Rectangle":
             self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
@@ -174,12 +199,13 @@ class AnimatedPlot:
 
 
         # Aktualizacja danych funkcji prostokątnej
-        self.line_moving.set_data(self.t, self.y_moving)
+        self.line_moving.set_data(-self.t, self.y_moving)
 
         # Aktualizacja danych funkcji trójkątnej
         self.line_static.set_data(self.t, self.y_static)
 
         return self.line_moving, self.line_static
+
 
 # Create signals classes
 class Signal1:
@@ -368,6 +394,8 @@ class App(customtkinter.CTk):
                 if attribute not in signal_attributes.get(type_2, []):
                     setattr(self.signal2, attribute, default_value)
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
+            self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
+            self.animated_plot.save_animation_as_gif('animation.gif')
         else:
             self.show_message_box("Invalid Input",
                                   "Please enter valid decimal values (max 2 decimal places, less than 1000000).")
