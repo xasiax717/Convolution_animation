@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PIL import Image
 from convolution import convolution, triangle_wave, square_wave, exponential_wave, sinusoidal_wave, cosinusoidal_wave
+from discrete import create_rounded_rectangle, draw_array, init_animation, update_animation
 
 
 customtkinter.set_appearance_mode("System")
@@ -265,6 +266,10 @@ class App(customtkinter.CTk):
         self.signal1.set_type("Rectangle")
         self.signal2 = Signal1()
         self.signal2.set_type("Rectangle")
+        self.x_size = 5
+        self.h_size = 5
+        self.entries_x = []
+        self.entries_h = []
 
         # application window, can change size if need
         self.title("convolution animation")
@@ -296,6 +301,8 @@ class App(customtkinter.CTk):
         self.sidebar_button_2.grid(row=2, column=0, padx=10, pady=10)
         self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.help_button_event, text="Help")
         self.sidebar_button_3.grid(row=3, column=0, padx=10, pady=10)
+        self.toggle_discrete_button = customtkinter.CTkButton(self.sidebar_frame, command=self.discrete_button_event, text="Discrete", fg_color="red")
+        self.toggle_discrete_button.grid(row=4, column=0, padx=20, pady=10)
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
         self.appearance_mode_label.grid(row=5, column=0, padx=10, pady=(10, 0))
         self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame,
@@ -327,8 +334,31 @@ class App(customtkinter.CTk):
         self.main_button_event()
 
 
-    def on_confirm_params_button_click(
-            self):  # check do all the parameters have the required format and then set it into signals classes
+    def choose_array_size1_event(self, array_size):
+        self.x_size = int(array_size)
+        print(array_size)
+        self.discrete_button_event()
+
+    def choose_array_size2_event(self, array_size):
+        self.h_size = int(array_size)
+        self.discrete_button_event()
+
+    def start_animation(self):
+        colors = ['#FFC0CB', '#40f4cd', '#faa009', '#d20057', '#135bb9', '#ffd700']
+        x_values = [int(entry.get()) for entry in self.entries_x]
+        h_values = [int(entry.get()) for entry in self.entries_h]
+        global x, h, y, n, x_padded, h_padded
+        x = np.array(x_values)
+        h = np.array(h_values)
+        y = []
+        n = len(x) + len(h) - 1
+        x_padded = np.pad(x, (0, len(h) - 1), 'constant')
+        h_padded = np.pad(h, (0, len(x) - 1), 'constant')
+        init_animation(self.canvas, x, h, 50, 150, 50, 250)
+        self.canvas.after(1000, update_animation, self.canvas, 0, x, h, 50, 150, 50, 250, 50, 50, colors, y)
+
+
+    def on_confirm_params_button_click(self):  # check do all the parameters have the required format and then set it into signals classes
         global valid_values_1, valid_values_2
         values_1 = []
         values_2 = []
@@ -467,6 +497,77 @@ class App(customtkinter.CTk):
 
     def toggle_start_animation(self):
         self.animated_plot.toggle_start_animation()
+    def discrete_button_event(self):
+        # create frame of signals type choosing
+        self.destroy()
+        self.entries_x = []
+        self.entries_h = []
+        self.arrays_size_frame = customtkinter.CTkFrame(self)
+        self.modifying_frames.append(self.arrays_size_frame)
+        self.arrays_size_frame.grid(row=0, column=1, padx=(20, 10), pady=(20, 0), sticky="nsew")
+        # todo: change the font
+        font = customtkinter.CTkFont(size=15)
+        self.label_type_1 = customtkinter.CTkLabel(master=self.arrays_size_frame, text="Choose 1 array size", width=70,
+                                                   height=10, font=font)
+        self.label_type_1.grid(row=0, column=0, padx=20, pady=20)
+        optionmenu_var_1 = customtkinter.StringVar(value=self.x_size)  # set initial value
+
+        self.optionmenu_1 = customtkinter.CTkOptionMenu(self.arrays_size_frame, dynamic_resizing=False,
+                                                        values=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], width=100, height=20,
+                                                        command=self.choose_array_size1_event, variable=optionmenu_var_1)
+
+        self.optionmenu_1.grid(row=1, column=0, padx=20, pady=(0, 10))
+        self.label_type_2 = customtkinter.CTkLabel(master=self.arrays_size_frame, text="Choose 2 array size", width=70,
+                                                   height=25, font=font)
+        self.label_type_2.grid(row=0, column=1, padx=20, pady=10)
+        optionmenu_var_2 = customtkinter.StringVar(value=self.h_size)  # set initial value
+
+        self.optionmenu_2 = customtkinter.CTkOptionMenu(self.arrays_size_frame, dynamic_resizing=False,
+                                                        values=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], width=100, height=20,
+                                                        command=self.choose_array_size2_event, variable=optionmenu_var_2)
+
+        self.optionmenu_2.grid(row=1, column=1, padx=20, pady=(5, 10))
+
+        # create frame of signals parameters choosing
+        signal1 = self.signal1.get_type()
+        signal2 = self.signal2.get_type()
+        self.signals_parameters_frame = customtkinter.CTkFrame(self)
+        self.separator2 = ttk.Separator(self.signals_parameters_frame, orient="horizontal")
+        self.separator2.grid(row=3, column=0, columnspan=7, sticky="ew", pady=(10, 0))
+        self.modifying_frames.append(self.signals_parameters_frame)
+        self.signals_parameters_frame.grid(row=0, column=2, padx=(10, 0), pady=(20, 10), sticky="nsew")
+        self.label1 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Enter array 1 parameters:",
+                                             font=font)
+        if self.x_size >= self.h_size:
+            cs = self.x_size
+        else:
+            cs = self.h_size
+        self.label1.grid(row=0, column=0, columnspan=cs, pady=(20, 0), padx=10)
+
+        # create input for signal1
+        # labels of inputs and its amount depends on the chosen type of signal
+        for i in range(self.x_size):
+            entry = customtkinter.CTkEntry(master=self.signals_parameters_frame, width=50, height=50)
+            entry.grid(row=1, column=i, padx=1, pady=10)
+            self.entries_x.append(entry)
+        self.label2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Enter array 2 parameters:",
+                                             font=font)
+        self.label2.grid(row=3, column=0, columnspan=cs, pady=(20, 0))
+
+        for i in range(self.h_size):
+            entry = customtkinter.CTkEntry(master=self.signals_parameters_frame, width=50, height=50)
+            entry.grid(row=4, column=i, padx=1, pady=10)
+            self.entries_h.append(entry)
+
+        self.start_button = customtkinter.CTkButton(master=self.signals_parameters_frame, text="Start Animation",
+                                                    command=self.start_animation)
+        self.start_button.grid(row=5, column=0, columnspan=cs, pady=10)
+        # create the simulation frame
+        self.simulation_frame = customtkinter.CTkFrame(self)
+        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx=(20, 10), pady=(20, 0), sticky="nsew")
+
+        self.canvas = tk.Canvas(self.simulation_frame, width=1200, height=300)
+        self.canvas.grid(row=0, column=0, padx=10, pady=10)
 
     def main_button_event(self):  # frame activated when main is chosen
         # create frame of signals type choosing
