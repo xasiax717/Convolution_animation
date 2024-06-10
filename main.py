@@ -23,7 +23,7 @@ class AnimatedPlot:
         self.signal2 = signal2
         self.dt = 0.01
 
-        xmax = max(abs(int(signal1.get_shift())) + abs(int(signal1.get_width())) / 2, abs(int(signal2.get_shift())) + abs(int(signal1.get_width())) / 2)+1
+        xmax = max(abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2, abs(float(signal2.get_shift())) + abs(float(signal1.get_width())) / 2)+1
         self.t = np.arange(-xmax, xmax, self.dt)
 
         if signal1.get_type() == "Rectangle":
@@ -94,22 +94,22 @@ class AnimatedPlot:
         self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan=2, sticky="nsew")
         self.canvas2.draw()
 
-        amp1 = int(self.signal1.get_amplitude())
-        amp2 = int(self.signal2.get_amplitude())
+        amp1 = float(self.signal1.get_amplitude())
+        amp2 = float(self.signal2.get_amplitude())
         if self.signal1.get_type() == "Sinus" and self.signal2.get_type() != "Sinus":
-            ylim1 = int(min(-amp1, amp2)) - 0.2
-            ylim2 = int(max(amp1, amp2)) + 0.2
+            ylim1 = float(min(-amp1, amp2)) - 0.2
+            ylim2 = float(max(amp1, amp2)) + 0.2
         elif self.signal1.get_type() != "Sinus" and self.signal2.get_type() == "Sinus":
-            ylim1 = int(min(amp1, -amp2)) - 0.2
-            ylim2 = int(max(amp1, amp2)) + 0.2
+            ylim1 = float(min(amp1, -amp2)) - 0.2
+            ylim2 = float(max(amp1, amp2)) + 0.2
         elif self.signal1.get_type() == "Sinus" and self.signal2.get_type() == "Sinus":
-            ylim1 = int(min(-amp1, -amp2)) - 0.2
-            ylim2 = int(max(amp1, amp2)) + 0.2
+            ylim1 = float(min(-amp1, -amp2)) - 0.2
+            ylim2 = float(max(amp1, amp2)) + 0.2
         elif amp1 > 0 and amp2 > 0:
             ylim1 = 0
-            ylim2 = int(max(amp1, amp2)) + 0.2
+            ylim2 = float(max(amp1, amp2)) + 0.2
         elif amp1 < 0 and amp2 < 0:
-            ylim1 = int(min(amp1, amp2)) - 0.2
+            ylim1 = float(min(amp1, amp2)) - 0.2
             ylim2 = 0
         elif amp1 < 0 < amp2:
             ylim1 = amp1 - 0.2
@@ -366,34 +366,80 @@ class App(customtkinter.CTk):
 
 
     def on_confirm_params_button_click(self):  # check do all the parameters have the required format and then set it into signals classes
-        global valid_values_1, valid_values_2
-        values_1 = []
-        values_2 = []
-        for entry_1, entry_2 in zip(self.entries_1, self.entries_2):
-            # Get the values entered in the entries
-            value_1 = entry_1.get()
-            value_2 = entry_2.get()
-            if not self.check_decimal(value_1):
-                entry_1.configure(fg_color='red')
-                valid_values_1 = False
+        global valid_values
+        valid_values = True
+        values1 = []
+        values2 = []
+        if self.signal1 == "Rectangle" or "Triangle":
+            value_amp = self.entries_1[0]
+            value_shift = self.entries_1[1]
+            value_width = self.entries_1[2]
+            if not (self.check_amplitude(value_amp.get())):
+                value_amp.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid amplitude (max 2 decimal places, [-25, 25]).")
 
             else:
-                entry_1.configure(fg_color=self.current_fg_color)
-                valid_values_1 = True
+                value_amp.configure(fg_color=self.current_fg_color)
+                values1.append(value_amp.get())
 
-            if not self.check_decimal(value_2):
-                valid_values_2 = False
-                entry_2.configure(fg_color='red')
+            if not (self.check_shift(value_shift.get())):
+                value_shift.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid shift in time (max 2 decimal places, [-10^6, 10^6]).")
 
             else:
-                valid_values_2 = True
-                entry_2.configure(fg_color=self.current_fg_color)
+                value_shift.configure(fg_color=self.current_fg_color)
+                values1.append(value_shift.get())
 
-            values_1.append(value_1)
-            values_2.append(value_2)
+            if not (self.check_width(value_width.get())):
+                value_width.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid width (max 2 decimal places, [-50, 50]).")
+
+            else:
+                value_width.configure(fg_color=self.current_fg_color)
+                values1.append(value_width.get())
+        if self.signal2 == "Rectangle" or "Triangle":
+            value_amp = self.entries_2[0]
+            value_shift = self.entries_2[1]
+            value_width = self.entries_2[2]
+            if not (self.check_amplitude(value_amp.get())):
+                value_amp.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid amplitude (max 2 decimal places, [-25, 25]).")
+
+            else:
+                value_amp.configure(fg_color=self.current_fg_color)
+                values2.append(value_amp.get())
+
+            if not (self.check_shift(value_shift.get())):
+                value_shift.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid shift in time (max 2 decimal places, [-10^6, 10^6]).")
+
+            else:
+                value_shift.configure(fg_color=self.current_fg_color)
+                values2.append(value_shift.get())
+
+            if not (self.check_width(value_width.get())):
+                value_width.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid width (max 2 decimal places, [-50, 50]).")
+
+            else:
+                value_width.configure(fg_color=self.current_fg_color)
+                values2.append(value_width.get())
+
 
         # If all values fit the required format, proceed with further actions
-        if valid_values_1 and valid_values_2:
+        if valid_values:
             type_1 = self.signal1.get_type()
             type_2 = self.signal2.get_type()
 
@@ -406,12 +452,12 @@ class App(customtkinter.CTk):
             }
 
             # Set attributes for signal1
-            for attribute, value in zip(signal_attributes.get(type_1, []), values_1):
+            for attribute, value in zip(signal_attributes.get(type_1, []), values1):
                 setattr(self.signal1, attribute, value)
                 getattr(self.signal1, f"set_{attribute}")(value)
 
             # Set attributes for signal2
-            for attribute, value in zip(signal_attributes.get(type_2, []), values_2):
+            for attribute, value in zip(signal_attributes.get(type_2, []), values2):
                 setattr(self.signal2, attribute, value)
                 getattr(self.signal2, f"set_{attribute}")(value)
 
@@ -434,8 +480,6 @@ class App(customtkinter.CTk):
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
             self.animated_plot.save_animation_as_gif('animation.gif')
         else:
-            self.show_message_box("Invalid Input",
-                                  "Please enter valid decimal values (max 2 decimal places, less than 1000000).")
             return
 
     def show_message_box(self, title, message):  # show the message box if values are not correct
@@ -460,7 +504,6 @@ class App(customtkinter.CTk):
     def check_decimal(self, value):  # check do the values have the valid format
         try:
             float_value = float(value)
-
             # Check if the value is a decimal number with at most 2 decimal places and less than 1000000
             if 0 <= float_value < 1000000 and (
                     '{:.2f}'.format(float_value) == value or '{:.0f}'.format(float_value) == value or '{:.1f}'.format(
@@ -470,7 +513,39 @@ class App(customtkinter.CTk):
                 return False
         except ValueError:
             return False
-
+    def check_amplitude(self, value):
+        try:
+            float_value = float(value)
+            if -1000001 < float_value < 1000001 and ('{:.2f}'.format(float_value) == value
+                                           or '{:.0f}'.format(float_value) == value
+                                           or '{:.1f}'.format(float_value) == value):
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
+    def check_shift(self, value):
+        try:
+            float_value = float(value)
+            if -21 < float_value < 21 and ('{:.2f}'.format(float_value) == value
+                                           or '{:.0f}'.format(float_value) == value
+                                           or '{:.1f}'.format(float_value) == value):
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
+    def check_width(self, value):
+        try:
+            float_value = float(value)
+            if -51 < float_value < 51 and ('{:.2f}'.format(float_value) == value
+                                           or '{:.0f}'.format(float_value) == value
+                                           or '{:.1f}'.format(float_value) == value):
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
     def on_enter_continue(self, event):  # hover image continue button
         light_image = Image.open('resources/continue_hover_blue.png')
         photo_light_image = customtkinter.CTkImage(light_image)
