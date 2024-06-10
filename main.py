@@ -60,7 +60,10 @@ class AnimatedPlot:
             sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
         self.x, self.y, self.xlim = convolution(sig1, sig2, self.dt)
-        print(self.xlim)
+        print("xlim", self.xlim)
+        print("xlim", self.xlim)
+        print("xmax", xmax)
+        # self.xmax = max(xmax, 40)
         self.ylow = np.min(self.y)
 
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
@@ -94,8 +97,8 @@ class AnimatedPlot:
         num_frames = len(self.x)
         print(num_frames)
 
-        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames/15), init_func=self.init, blit=True, interval=50)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames/15), init_func=self.init, blit=True, interval=50)
+        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames/15), init_func=self.init, blit=True, interval=20)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames/15), init_func=self.init, blit=True, interval=20)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
@@ -108,16 +111,8 @@ class AnimatedPlot:
 
         amp1 = float(self.signal1.get_amplitude())
         amp2 = float(self.signal2.get_amplitude())
-        if self.signal1.get_type() == "Sinus" and self.signal2.get_type() != "Sinus":
-            ylim1 = float(min(-amp1, amp2)) - 0.2
-            ylim2 = float(max(amp1, amp2)) + 0.2
-        elif self.signal1.get_type() != "Sinus" and self.signal2.get_type() == "Sinus":
-            ylim1 = float(min(amp1, -amp2)) - 0.2
-            ylim2 = float(max(amp1, amp2)) + 0.2
-        elif self.signal1.get_type() == "Sinus" and self.signal2.get_type() == "Sinus":
-            ylim1 = float(min(-amp1, -amp2)) - 0.2
-            ylim2 = float(max(amp1, amp2)) + 0.2
-        elif amp1 > 0 and amp2 > 0:
+
+        if amp1 > 0 and amp2 > 0:
             ylim1 = 0
             ylim2 = float(max(amp1, amp2)) + 0.2
         elif amp1 < 0 and amp2 < 0:
@@ -395,7 +390,7 @@ class App(customtkinter.CTk):
         valid_values = True
         values1 = []
         values2 = []
-        if self.signal1 == "Rectangle" or "Triangle":
+        if self.signal1.get_type() == "Rectangle" or self.signal1.get_type() == "Triangle":
             value_amp = self.entries_1[0]
             value_shift = self.entries_1[1]
             value_width = self.entries_1[2]
@@ -428,7 +423,7 @@ class App(customtkinter.CTk):
             else:
                 value_width.configure(fg_color=self.current_fg_color)
                 values1.append(value_width.get())
-        if self.signal2 == "Rectangle" or "Triangle":
+        if self.signal2.get_type() == "Rectangle" or self.signal2.get_type() == "Triangle":
             value_amp = self.entries_2[0]
             value_shift = self.entries_2[1]
             value_width = self.entries_2[2]
@@ -451,6 +446,51 @@ class App(customtkinter.CTk):
             else:
                 value_shift.configure(fg_color=self.current_fg_color)
                 values2.append(value_shift.get())
+
+            if not (self.check_width(value_width.get())):
+                value_width.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid width (max 2 decimal places, [-50, 50]).")
+
+            else:
+                value_width.configure(fg_color=self.current_fg_color)
+                values2.append(value_width.get())
+        if self.signal1.get_type() == "Exponential":
+            value_amp = self.entries_1[0]
+            value_width = self.entries_1[1]
+            if not (self.check_amplitude(value_amp.get())):
+                value_amp.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid amplitude (max 2 decimal places, [-25, 25]).")
+
+            else:
+                value_amp.configure(fg_color=self.current_fg_color)
+                values1.append(value_amp.get())
+
+
+            if not (self.check_width(value_width.get())):
+                value_width.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid width (max 2 decimal places, [-50, 50]).")
+
+            else:
+                value_width.configure(fg_color=self.current_fg_color)
+                values1.append(value_width.get())
+        if self.signal2.get_type() == "Exponential":
+            value_amp = self.entries_2[0]
+            value_width = self.entries_2[1]
+            if not (self.check_amplitude(value_amp.get())):
+                value_amp.configure(fg_color='red')
+                valid_values = False
+                self.show_message_box("Invalid Input",
+                                      "Please enter valid amplitude (max 2 decimal places, [-25, 25]).")
+
+            else:
+                value_amp.configure(fg_color=self.current_fg_color)
+                values2.append(value_amp.get())
 
             if not (self.check_width(value_width.get())):
                 value_width.configure(fg_color='red')
