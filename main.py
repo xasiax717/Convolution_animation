@@ -12,6 +12,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from PIL import Image
 from convolution import convolution, triangle_wave, square_wave, exponential_wave, sinusoidal_wave, cosinusoidal_wave
 from discrete import create_rounded_rectangle, draw_array, init_animation, update_animation
+from PIL import Image, ImageTk
 
 
 customtkinter.set_appearance_mode("System")
@@ -292,15 +293,12 @@ class App(customtkinter.CTk):
         self.grid_columnconfigure(3, weight=1)
         self.grid_rowconfigure((0, 1, 2), weight=1)
 
-        # create sidebar frame with widgets
+        # create sidebar frame with widget
+
         self.sidebar_frame = customtkinter.CTkFrame(self, width=110, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
 
-        # todo: set the logo
-        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Convolution animation",
-                                                 font=customtkinter.CTkFont(size=10, weight="bold"))
-        self.logo_label.grid(row=0, column=0, padx=10, pady=(20, 10))
         self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, command=self.main_button_event, text="Main")
         self.sidebar_button_1.grid(row=1, column=0, padx=10, pady=10)
         self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, command=self.about_button_event,
@@ -325,6 +323,22 @@ class App(customtkinter.CTk):
         self.scaling_optionemenu.grid(row=8, column=0, padx=10, pady=(10, 20))
         self.main_button_event()
 
+        self.set_icon()
+
+    def set_icon(self):
+        # Load the image
+        image_path = "resources/logo.png"
+        image = Image.open(image_path)
+        image = image.resize((90, 50), Image.Resampling.LANCZOS)
+        photo = ImageTk.PhotoImage(image)
+
+        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, image=photo, text="")
+        self.logo_label.image = photo  # keep a reference to the image to prevent garbage collection
+        self.logo_label.grid(row=0, column=0, padx=10, pady=(20, 10))
+        self.iconphoto(False, photo)
+    def add_title_label(self):
+        title_label = tk.Label(self, text="Convolution animation", font=("Helvetica", 16))
+        title_label.pack(pady=10)
     def change_appearance_mode_event(self, new_appearance_mode: str):  # change color scheme of app
         customtkinter.set_appearance_mode(new_appearance_mode)
 
