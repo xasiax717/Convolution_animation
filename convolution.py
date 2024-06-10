@@ -16,7 +16,8 @@ def triangle_wave(t, amplitude, shift, width):
     return np.where(np.abs(t + shift) < width / 2, amplitude*np.abs(((t-shift) / (width / 2)) % 2 - 1), 0)
 
 def exponential_wave(t, amp, tau):
-    return np.where(t>0, amp*np.exp(-t / tau), 0)
+    base = np.exp(1)
+    return amp * np.power(base, t / tau)
 
 def sinusoidal_wave(t, A, f, φ):
     return A * np.sin(2 * np.pi * f * t + φ)
@@ -62,7 +63,7 @@ def get_convolution_data(signal1_choice, signal2_choice, dt):
     t_conv, result = convolution(signal1, signal2, dt)
     return t, signal1, signal2, t_conv, result
 
-def plot_signals(t, signals, labels, title):
+def plot_signals(t, signals, labels, title, ylim=None):
     plt.figure(figsize=(12, 8))
     for signal, label in zip(signals, labels):
         plt.plot(t, signal, label=label)
@@ -71,6 +72,8 @@ def plot_signals(t, signals, labels, title):
     plt.ylabel('Amplitude')
     plt.legend()
     plt.grid(True)
+    if ylim:
+        plt.ylim(0, ylim)  # Adjust the upper limit of the y-axis as needed
     plt.show()
 
 def main():
@@ -99,7 +102,7 @@ def main():
             selected_signals.append(triangle_wave(t, shift=1, amplitude=1, width=1))
             labels.append('Triangle Wave')
         elif choice == 3:
-            selected_signals.append(exponential_wave(t, tau=1))
+            selected_signals.append(exponential_wave(t, amp=1, tau=1))
             labels.append('Exponential Wave')
         elif choice == 5:
             selected_signals.append(sinusoidal_wave(t, A=2, f=0.5, φ=0))
@@ -111,11 +114,17 @@ def main():
             print("Invalid choice. Please enter a number between 1 and 8.")
 
     # Obliczenie splotu
-    t_conv, result = convolution(selected_signals[0], selected_signals[1], dt)
+    t_conv, result, x = convolution(selected_signals[0], selected_signals[1], dt)
 
-    # Wyświetlenie wykresów
+    # Finding the maximum value of the convolution result
+    max_result = np.max(result)
+
+    # Setting the y-axis limit for the convolution plot
+    ylim_convolution = min(4, max_result * 1.1)  # Set the maximum y-axis limit as 4 or 110% of the max result, whichever is smaller
+
+    # Displaying the plots
     plot_signals(t, selected_signals, labels, 'Selected Signals')
-    plot_signals(t_conv, [result], ['Convolution Result'], 'Convolution Result')
+    plot_signals(t_conv, [result], ['Convolution Result'], 'Convolution Result', ylim=ylim_convolution)
 
 
 if __name__ == "__main__":

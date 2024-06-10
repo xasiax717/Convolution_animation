@@ -2,14 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 
 import customtkinter
-from PIL import Image
-from matplotlib import animation
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.animation import FuncAnimation
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from PIL import Image
 from convolution import convolution, triangle_wave, square_wave, exponential_wave, sinusoidal_wave, cosinusoidal_wave
 from discrete import create_rounded_rectangle, draw_array, init_animation, update_animation
 from PIL import Image, ImageTk
@@ -24,8 +20,13 @@ class AnimatedPlot:
         self.signal2 = signal2
         self.dt = 0.01
 
-        xmax = max(abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2, abs(float(signal2.get_shift())) + abs(float(signal1.get_width())) / 2)+1
-        self.t = np.arange(-xmax, xmax, self.dt)
+        if signal1.get_type() != 'Exponential' and signal2.get_type() != 'Exponential':
+            xmax = max(abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2, abs(float(signal2.get_shift())) + abs(float(signal1.get_width())) / 2)+1
+            self.t = np.arange(-xmax, xmax, self.dt)
+        else:
+            if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
+                xmax = abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2
+                self.t = np.arange(-xmax*2, xmax*2, self.dt)
 
         if signal1.get_type() == "Rectangle":
             sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
@@ -60,13 +61,23 @@ class AnimatedPlot:
 
         self.x, self.y, self.xlim = convolution(sig1, sig2, self.dt)
         print(self.xlim)
-        self.xmax = max(xmax, self.xlim)
-        self.t = np.arange(-self.xmax, self.xmax, self.dt)
+        self.ylow = np.min(self.y)
+
+        if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
+            self.xmax = xmax
+            self.t = np.arange(-self.xmax, self.xmax, self.dt)
+
+        else:
+            self.xmax = max(xmax, self.xlim)
+            self.t = np.arange(-self.xmax, self.xmax, self.dt)
 
         # Initialize the plot
+
         self.fig, self.ax = plt.subplots(figsize=(5, 3))
         self.line, = self.ax.plot(self.x, self.y)
         self.ax.set_xlim(-self.xmax, self.xmax)
+        if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
+            self.ax.set_ylim(self.ylow, 1000000)
 
         self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
         self.line_moving, = self.ax2.plot([], [], lw=2)
@@ -124,24 +135,24 @@ class AnimatedPlot:
 
         self.anim_running = True
 
-    def save_animation_as_gif(self, filename, fps=20):
-        frames = []
-
-        for i in range(100):
-            self.update(i)
-            self.animate(i)
-            self.fig.canvas.draw()
-            self.fig2.canvas.draw()
-
-            image1 = Image.frombuffer('RGBA', self.fig.canvas.get_width_height(), self.fig.canvas.buffer_rgba())
-            image2 = Image.frombuffer('RGBA', self.fig2.canvas.get_width_height(), self.fig2.canvas.buffer_rgba())
-            combined_image = Image.new('RGBA', (image1.width + image2.width, max(image1.height, image2.height)))
-            combined_image.paste(image1, (0, 0))
-            combined_image.paste(image2, (image1.width, 0))
-            frames.append(combined_image)
-
-        frames[0].save(filename, save_all=True, append_images=frames[1:], optimize=False, duration=1000 / fps, loop=0)
-
+    # def save_animation_as_gif(self, filename, fps=20):
+    #     frames = []
+    #
+    #     for i in range(100):
+    #         self.update(i)
+    #         self.animate(i)
+    #         self.fig.canvas.draw()
+    #         self.fig2.canvas.draw()
+    #
+    #         image1 = Image.frombuffer('RGBA', self.fig.canvas.get_width_height(), self.fig.canvas.buffer_rgba())
+    #         image2 = Image.frombuffer('RGBA', self.fig2.canvas.get_width_height(), self.fig2.canvas.buffer_rgba())
+    #         combined_image = Image.new('RGBA', (image1.width + image2.width, max(image1.height, image2.height)))
+    #         combined_image.paste(image1, (0, 0))
+    #         combined_image.paste(image2, (image1.width, 0))
+    #         frames.append(combined_image)
+    #
+    #     frames[0].save(filename, save_all=True, append_images=frames[1:], optimize=False, duration=1000 / fps, loop=0)
+    #
 
     def toggle_pause_animation(self):
         if self.anim_running:
@@ -492,7 +503,7 @@ class App(customtkinter.CTk):
                     setattr(self.signal2, attribute, default_value)
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
-            self.animated_plot.save_animation_as_gif('animation.gif')
+            #self.animated_plot.save_animation_as_gif('animation.gif')
         else:
             return
 
@@ -518,6 +529,7 @@ class App(customtkinter.CTk):
     def check_decimal(self, value):  # check do the values have the valid format
         try:
             float_value = float(value)
+
             # Check if the value is a decimal number with at most 2 decimal places and less than 1000000
             if 0 <= float_value < 1000000 and (
                     '{:.2f}'.format(float_value) == value or '{:.0f}'.format(float_value) == value or '{:.1f}'.format(
