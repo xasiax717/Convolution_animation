@@ -23,9 +23,8 @@ class AnimatedPlot:
         self.signal2 = signal2
         self.dt = 0.01
 
-        xmax = max(abs(int(signal1.get_shift())) + abs(int(signal1.get_width())) / 2, abs(int(signal2.get_shift())) + abs(int(signal1.get_width())) / 2)
+        xmax = max(abs(int(signal1.get_shift())) + abs(int(signal1.get_width())) / 2, abs(int(signal2.get_shift())) + abs(int(signal1.get_width())) / 2)+1
         self.t = np.arange(-xmax, xmax, self.dt)
-
 
         if signal1.get_type() == "Rectangle":
             sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
@@ -60,13 +59,13 @@ class AnimatedPlot:
 
         self.x, self.y, self.xlim = convolution(sig1, sig2, self.dt)
         print(self.xlim)
-        self.xmax = max(abs(int(signal1.get_shift())) + abs(int(signal1.get_width())) / 2, abs(int(signal2.get_shift())) + abs(int(signal1.get_width())) / 2)
+        self.xmax = max(xmax, self.xlim)
         self.t = np.arange(-self.xmax, self.xmax, self.dt)
 
         # Initialize the plot
-        self.fig, self.ax = plt.subplots(figsize=(5,3))
+        self.fig, self.ax = plt.subplots(figsize=(5, 3))
         self.line, = self.ax.plot(self.x, self.y)
-        self.anim = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=100)
+        self.ax.set_xlim(-self.xmax, self.xmax)
 
         self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
         self.line_moving, = self.ax2.plot([], [], lw=2)
@@ -79,19 +78,20 @@ class AnimatedPlot:
             axis.spines['right'].set_color('None')
             axis.spines['top'].set_color('None')
 
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=200, init_func=self.init, blit=True, interval=50)
+        self.ax2.set_xlim(-self.xmax, self.xmax)
+        num_frames = len(self.x)
+        print(num_frames)
 
-        # ani = FuncAnimation(self.fig, self.update, frames=100, init_func=self.init, blit=True, interval=50)
-        # writer = animation.PillowWriter(fps=15, metadata=dict(artist='Me'), bitrate=1800)
-        # ani.save('scatter.gif', writer=writer)
+        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames/15), init_func=self.init, blit=True, interval=50)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames/15), init_func=self.init, blit=True, interval=50)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
+        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=10, columnspan=2, sticky="nsew")
         self.canvas.draw()
 
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=root)
-        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan = 2, sticky="nsew")
+        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan=2, sticky="nsew")
         self.canvas2.draw()
 
         amp1 = int(self.signal1.get_amplitude())
@@ -156,16 +156,19 @@ class AnimatedPlot:
 
     def init(self):
         self.line.set_data([], [])
-        return self.line,
+        self.line_moving.set_data([], [])
+        return self.line, self.line_moving
 
     def update(self, frame):
-        self.line.set_xdata(self.x[:frame * 200])
-        self.line.set_ydata(self.y[:frame * 200])
+        frame_count = 200
+        frame_index = frame * frame_count
+        self.line.set_xdata(self.x[:frame_index])
+        self.line.set_ydata(self.y[:frame_index])
         return self.line,
 
     def animate(self, i):
-        # Obliczenie środka funkcji prostokątnej w zależności od klatki animacji
-        moving_center = i * self.dt * 100 * 0.5 - self.xmax #nie mam pojecia co to za liczby ale chyba działa
+        # Compute the center of the moving function based on the frame number
+        moving_center = i * self.dt * 100 * 0.5 - self.xmax
 
         if self.signal1.get_type() == "Rectangle":
             self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
@@ -199,13 +202,17 @@ class AnimatedPlot:
             self.y_static = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
 
-        # Aktualizacja danych funkcji prostokątnej
+        # Update the data for the moving function
         self.line_moving.set_data(-self.t, self.y_moving)
 
-        # Aktualizacja danych funkcji trójkątnej
+        # Update the data for the static function
         self.line_static.set_data(self.t, self.y_static)
 
-        return self.line_moving, self.line_static
+        # Update the convolution plot as well
+        self.update(i)
+
+        return self.line_moving, self.line_static, self.line
+
 
 
 # Create signals classes

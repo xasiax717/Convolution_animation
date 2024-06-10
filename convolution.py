@@ -26,10 +26,8 @@ def cosinusoidal_wave(t, A, f, phase):
 
 def convolution(signal1, signal2, dt):
     result = convolve(signal1, signal2, mode='full') * dt
-    result_len = len(result)
-    half_len = result_len // 2
-    t_conv = np.arange(-half_len, half_len + 1) * dt
-    x_lim = half_len * dt
+    t_conv = np.linspace(-0.5 * len(result) * dt, 0.5 * len(result) * dt, len(result))
+    x_lim = 0.5*len(result)*dt
     return t_conv, result, x_lim
 
 def get_convolution_data(signal1_choice, signal2_choice, dt):
