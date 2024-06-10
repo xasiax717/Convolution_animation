@@ -63,7 +63,8 @@ class AnimatedPlot:
         print("xlim", self.xlim)
         print("xlim", self.xlim)
         print("xmax", xmax)
-        # self.xmax = max(xmax, 40)
+        self.xmax = max(xmax, abs(self.xlim)) + 1
+        print("self.xmax", self.xmax)
         self.ylow = np.min(self.y)
 
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
@@ -71,7 +72,7 @@ class AnimatedPlot:
             self.t = np.arange(-self.xmax, self.xmax, self.dt)
 
         else:
-            self.xmax = max(xmax, self.xlim)
+            self.xmax = self.xmax
             self.t = np.arange(-self.xmax, self.xmax, self.dt)
 
         # Initialize the plot
@@ -97,8 +98,8 @@ class AnimatedPlot:
         num_frames = len(self.x)
         print(num_frames)
 
-        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames/15), init_func=self.init, blit=True, interval=20)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames/15), init_func=self.init, blit=True, interval=20)
+        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames/15), init_func=self.init, blit=True, interval=100)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames/15), init_func=self.init, blit=True, interval=100)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)

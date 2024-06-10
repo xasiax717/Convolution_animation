@@ -28,8 +28,19 @@ def cosinusoidal_wave(t, A, f, phase):
 def convolution(signal1, signal2, dt):
     result = convolve(signal1, signal2, mode='full') * dt
     t_conv = np.linspace(-0.5 * len(result) * dt, 0.5 * len(result) * dt, len(result))
-    x_lim = 0.5*len(result)*dt
-    return t_conv, result, x_lim
+    x_lim = (t_conv[0], t_conv[-1])
+    print(x_lim)
+    # print(f"The interval of x values where the convolution exists: {x_lim}")
+    # print(f"Convolution values in the interval:")
+    for t_val, r_val in zip(t_conv, result):
+        if x_lim[0] <= t_val <= x_lim[1]:
+            print(f"t = {t_val:.2f}, conv = {r_val:.2f}")
+            if round(r_val, 4) == 0:
+                continue
+            else:
+                x_lim0 = t_val
+                break
+    return t_conv, result, x_lim0
 
 def get_convolution_data(signal1_choice, signal2_choice, dt):
     t = np.arange(-10, 10, dt)
