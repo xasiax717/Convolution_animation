@@ -17,11 +17,11 @@ customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")  # ,"green", "dark-blue"
 
 class AnimatedPlot:
-    def __init__(self, root, signal1, signal2):
+    def __init__(self, root, signal1, signal2, speed):
         self.signal1 = signal1
         self.signal2 = signal2
         self.dt = 0.005
-        self.speed = 1
+        self.speed = speed
 
         if signal1.get_type() != 'Exponential' and signal2.get_type() != 'Exponential':
             xmax = max(abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2, abs(float(signal2.get_shift())) + abs(float(signal2.get_width())) / 2)
@@ -99,7 +99,6 @@ class AnimatedPlot:
 
         self.ax2.set_xlim(-self.xmax, self.xmax)
 
-        self.speed = 3
         print(self.speed, "poczatek")
         self.frame_count = int(round(len(self.x)/200*self.speed**2, 0))
         self.num_frames = len(self.x)/self.frame_count
@@ -328,7 +327,7 @@ class App(customtkinter.CTk):
         self.h_size = 5
         self.entries_x = []
         self.entries_h = []
-        self.speed_app = 1
+        self.speed = 2
 
         # application window, can change size if need
         self.title("convolution animation")
@@ -432,6 +431,7 @@ class App(customtkinter.CTk):
     def on_confirm_params_button_click(self):  # check do all the parameters have the required format and then set it into signals classes
         global valid_values
         valid_values = True
+
         values1 = []
         values2 = []
         if self.signal1.get_type() == "Rectangle" or self.signal1.get_type() == "Triangle":
@@ -591,7 +591,7 @@ class App(customtkinter.CTk):
             except:
                 ...
 
-            self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
+            self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2, self.speed)
             # self.animated_plot.save_static_plot(directory="C:/Users/Emilia/PycharmProjects/Convolution_animation")
             #self.animated_plot.save_animation_as_gif
             #self.animated_plot.save_animation_as_png_sequence(directory="C:/Users/Emilia/PycharmProjects/Convolution_animation")
@@ -701,16 +701,16 @@ class App(customtkinter.CTk):
     def update_speed(self):
         speed = self.speed_var.get()
         if speed == "Low":
-            self.speed = 1
+            speed_val = 1
         elif speed == "Medium":
-            self.speed = 2
+            speed_val = 2
         elif speed == "High":
-            self.speed = 3
-
-        self.animated_plot.speed = self.speed
+            speed_val = 3
 
         print(f"Speed updated to {self.speed}")
-        #self.on_confirm_params_button_click()
+        self.animated_plot.destroy()
+        self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2, speed_val)
+
     def discrete_button_event(self):
         # create frame of signals type choosing
         self.destroy()
@@ -940,25 +940,25 @@ class App(customtkinter.CTk):
         )
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
-        self.pauseButton.grid(row=3, column=0,padx=(750,10), pady=(10, 10), sticky="w")
+        self.pauseButton.grid(row=3, column=0,padx=(550,10), pady=(10, 10), sticky="w")
 
         self.speed_var = customtkinter.StringVar(value="Medium")
 
         self.speed_label = customtkinter.CTkLabel(master=self.simulation_frame, text="Speed: ", width=70,
                                                    height=10, font=font)
-        self.speed_label.grid(row=3, column=0, pady=10, padx=(0, 10))
+        self.speed_label.grid(row=3, column=0, pady=10, padx=(0, 100), sticky="w")
 
         self.low_speed_rb = customtkinter.CTkRadioButton(
             self.simulation_frame, text="Low", variable=self.speed_var, value="Low",command=self.update_speed)
-        self.low_speed_rb.grid(row=3, column=0, pady=10, padx=(200, 10))
+        self.low_speed_rb.grid(row=3, column=0, pady=10, padx=(100, 500))
 
         self.medium_speed_rb = customtkinter.CTkRadioButton(
             self.simulation_frame, text="Medium", variable=self.speed_var, value="Medium", command=self.update_speed)
-        self.medium_speed_rb.grid(row=3, column=0, pady=10, padx=(400, 10))
+        self.medium_speed_rb.grid(row=3, column=0, pady=10, padx=(100, 300))
 
         self.high_speed_rb = customtkinter.CTkRadioButton(
             self.simulation_frame, text="High", variable=self.speed_var, value="High", command=self.update_speed)
-        self.high_speed_rb.grid(row=3, column=0, pady=10, padx=(600, 10))
+        self.high_speed_rb.grid(row=3, column=0, pady=10, padx=(100, 100))
 
 
 

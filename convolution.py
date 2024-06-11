@@ -13,7 +13,7 @@ def square_wave(t, amplitude, shift, width):
     return np.where(np.abs(t + shift) < width / 2, amplitude, 0)
 
 def triangle_wave(t, amplitude, shift, width):
-    return np.where(np.abs(t + shift) < width / 2, amplitude * np.abs(((t - shift) / (width / 2)) % 2 - 1), 0)
+    return np.where(np.abs(t + shift) < width / 2, amplitude * np.abs(((t + shift) / (width / 2)) % 2 - 1), 0)
 
 def exponential_wave(t, amp, tau):
     base = np.exp(1)
@@ -93,7 +93,7 @@ def plot_signals(t, signals, labels, title, ylim=None):
     plt.show()
 
 def main():
-    dt = 0.01
+    dt = 0.1
     t = np.arange(-10, 10, dt)
 
     print("Select signals for convolution:")
