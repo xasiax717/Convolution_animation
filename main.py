@@ -1,3 +1,4 @@
+import math
 import os
 import tkinter as tk
 from tkinter import ttk
@@ -27,7 +28,7 @@ class AnimatedPlot:
         else:
             if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
                 xmax = abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2
-                self.t = np.arange(-xmax*2, xmax*2, self.dt)
+                self.t = np.arange(-xmax*2.5, xmax*2.5, self.dt)
 
         if signal1.get_type() == "Rectangle":
             sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
@@ -60,7 +61,7 @@ class AnimatedPlot:
         if signal2.get_type() == "Cosinus":
             sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
-        self.x, self.y, self.xlim = convolution(sig1, sig2, self.dt)
+        self.x, self.y, self.xlim, self.ylimexp = convolution(sig1, sig2, self.dt)
         # self.x = self.x
         # self.y = self.y
 
@@ -79,7 +80,7 @@ class AnimatedPlot:
         self.line, = self.ax.plot(self.x, self.y)
         self.ax.set_xlim(-self.xmax-1, self.xmax+1)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
-            self.ax.set_ylim(self.ylow, self.yhigh/2)
+            self.ax.set_ylim(self.ylow, self.ylimexp+self.ylimexp*0.5)
 
         self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
         self.line_moving, = self.ax2.plot([], [], lw=2)
@@ -95,9 +96,9 @@ class AnimatedPlot:
         self.ax2.set_xlim(-self.xmax, self.xmax)
         num_frames = len(self.x)
 
-        print(len(self.x), len(self.t))
-        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames), init_func=self.init, blit=True, interval=1000)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames), init_func=self.init, blit=True, interval=1000)
+
+        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames), init_func=self.init, blit=True, interval=50)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames), init_func=self.init, blit=True, interval=50)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
@@ -186,7 +187,7 @@ class AnimatedPlot:
 
     def animate(self, frame):
         # Compute the center of the moving function based on the frame number
-        shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
+        #shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
 
         if self.signal1.get_type() != 'Exponential' and self.signal2.get_type() != 'Exponential':
             shift_caused_by_width = (self.xlim[1] - self.xlim[0] - float(self.signal2.get_width())) / 2
@@ -209,6 +210,7 @@ class AnimatedPlot:
 
         if self.signal1.get_type() == "Cosinus":
             self.y_moving = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), moving_center)
+
 
         if self.signal2.get_type() == "Rectangle":
             self.y_static = square_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))

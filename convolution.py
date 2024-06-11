@@ -30,6 +30,8 @@ def convolution(signal1, signal2, dt):
     t_conv = np.linspace(-0.5 * len(result) * dt, 0.5 * len(result) * dt, len(result))
     x_lim_conv = (t_conv[0], t_conv[-1])
     x_values = []
+
+    value_at_zero = 0
     # print(result)
     for t_val, r_val in zip(t_conv, result):
         if x_lim_conv[0] <= t_val <= x_lim_conv[1]:
@@ -37,10 +39,12 @@ def convolution(signal1, signal2, dt):
                 continue
             else:
                 x_values.append(t_val)
+
+            if t_val == 0:
+                value_at_zero = r_val
+    print(f"Value of result at t_conv == 0: {value_at_zero}")
     x_lim = (min(x_values), max(x_values))
-    # print(min(x_values))
-    # print(max(x_values))
-    return t_conv, result, x_lim
+    return t_conv, result, x_lim, value_at_zero
 
 
 def get_convolution_data(signal1_choice, signal2_choice, dt):
