@@ -22,12 +22,12 @@ class AnimatedPlot:
         self.dt = 0.01
 
         if signal1.get_type() != 'Exponential' and signal2.get_type() != 'Exponential':
-            xmax = max(abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2, abs(float(signal2.get_shift())) + abs(float(signal1.get_width())) / 2)+1
+            xmax = max(abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2, abs(float(signal2.get_shift())) + abs(float(signal2.get_width())) / 2)
+
             self.t = np.arange(-xmax, xmax, self.dt)
         else:
-            if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
-                xmax = abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2
-                self.t = np.arange(-xmax*2.5, xmax*2.5, self.dt)
+            xmax = abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2
+            self.t = np.arange(-xmax*2.5, xmax*2.5, self.dt)
 
         if signal1.get_type() == "Rectangle":
             sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
@@ -65,6 +65,9 @@ class AnimatedPlot:
         # self.y = self.y
 
         self.xmax = max(xmax, abs(self.xlim[0]), abs(self.xlim[1]))
+        print(xmax)
+        print(abs(self.xlim[0]))
+        print(self.xmax)
         self.ylow = np.min(self.y)
         self.yhigh = np.max(self.y)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
@@ -77,7 +80,7 @@ class AnimatedPlot:
 
         self.fig, self.ax = plt.subplots(figsize=(5, 3))
         self.line, = self.ax.plot(self.x, self.y)
-        self.ax.set_xlim(-self.xmax, self.xmax)
+        self.ax.set_xlim(-self.xmax-1, self.xmax+1)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
             self.ax.set_ylim(self.ylow, self.ylimexp+self.ylimexp*0.5)
 
@@ -92,11 +95,13 @@ class AnimatedPlot:
             axis.spines['right'].set_color('None')
             axis.spines['top'].set_color('None')
 
-        self.ax2.set_xlim(-self.xmax-1, self.xmax+1)
-        num_frames = len(self.x)
+        self.ax2.set_xlim(-self.xmax, self.xmax)
 
-        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames), init_func=self.init, blit=True, interval=1000)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames), init_func=self.init, blit=True, interval=1000)
+        self.speed = 3
+        self.frame_count = int(len(self.x)/200*self.speed**2)
+        self.num_frames = len(self.x)/self.frame_count
+        self.anim = FuncAnimation(self.fig, self.update, frames=int(self.num_frames), init_func=self.init, blit=True, interval=50)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(self.num_frames), init_func=self.init, blit=True, interval=50)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
@@ -176,14 +181,13 @@ class AnimatedPlot:
         return self.line, self.line_moving
 
     def update(self, frame):
-        frame_count = 50
-        frame_index = frame * frame_count
+        frame_index = frame * self.frame_count
         self.line.set_xdata(self.x[:frame_index])
         self.line.set_ydata(self.y[:frame_index])
         return self.line,
 
-
     def animate(self, frame):
+
         # Compute the center of the moving function based on the frame number
         if self.signal1.get_type() != 'Exponential' and self.signal2.get_type() != 'Exponential':
             shift_caused_by_width = (self.xlim[1] - self.xlim[0] - float(self.signal2.get_width())) / 2
@@ -192,7 +196,7 @@ class AnimatedPlot:
         else:
             shift_caused_by_width = 0
             shift_caused_by_shift = 0
-        moving_center = frame * self.dt * 100 * 0.5 - float(self.signal1.get_width())/2 + self.t[0] + shift_caused_by_width - shift_caused_by_shift
+        moving_center = frame * self.dt * self.frame_count  - float(self.signal1.get_width())/2 + self.t[0] + shift_caused_by_width
 
         if self.signal1.get_type() == "Rectangle":
             self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
@@ -236,7 +240,28 @@ class AnimatedPlot:
 
         return self.line_moving, self.line_static, self.line
 
+    def destroy(self):
+        # Stop animations
+        if self.anim_running:
+            self.anim.event_source.stop()
+            self.anim2.event_source.stop()
 
+        # Destroy Tkinter widgets
+        self.canvas.get_tk_widget().destroy()
+        self.canvas2.get_tk_widget().destroy()
+
+        # Close matplotlib figures
+        plt.close(self.fig)
+        plt.close(self.fig2)
+
+        # Clear any references to avoid memory leaks
+        self.root = None
+        self.signal1 = None
+        self.signal2 = None
+        self.fig = None
+        self.fig2 = None
+        self.canvas = None
+        self.canvas2 = None
 
 # Create signals classes
 class Signal1:
@@ -379,7 +404,6 @@ class App(customtkinter.CTk):
 
     def choose_array_size1_event(self, array_size):
         self.x_size = int(array_size)
-        # print(array_size)
         self.discrete_button_event()
 
     def choose_array_size2_event(self, array_size):
@@ -557,7 +581,12 @@ class App(customtkinter.CTk):
             for attribute, default_value in default_attributes.get(type_2, {}).items():
                 if attribute not in signal_attributes.get(type_2, []):
                     setattr(self.signal2, attribute, default_value)
-            self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
+            try:
+                self.animated_plot.destroy()
+                print("End")
+            except:
+                ...
+
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
             # self.animated_plot.save_static_plot(directory="C:/Users/Emilia/PycharmProjects/Convolution_animation")
             #self.animated_plot.save_animation_as_gif
