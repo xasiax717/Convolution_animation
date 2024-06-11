@@ -61,11 +61,12 @@ class AnimatedPlot:
             sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
         self.x, self.y, self.xlim = convolution(sig1, sig2, self.dt)
-        self.x = self.x
-        self.y = self.y
+        # self.x = self.x
+        # self.y = self.y
 
         self.xmax = max(xmax, abs(self.xlim[0]), abs(self.xlim[1])) + 1
         self.ylow = np.min(self.y)
+        self.yhigh = np.max(self.y)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
             self.xmax = xmax
             self.t = np.arange(-self.xmax, self.xmax, self.dt)
@@ -80,7 +81,7 @@ class AnimatedPlot:
         self.line, = self.ax.plot(self.x, self.y)
         self.ax.set_xlim(-self.xmax, self.xmax)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
-            self.ax.set_ylim(self.ylow, 1000000)
+            self.ax.set_ylim(self.ylow, self.yhigh/2)
 
         self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
         self.line_moving, = self.ax2.plot([], [], lw=2)

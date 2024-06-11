@@ -30,9 +30,10 @@ def convolution(signal1, signal2, dt):
     t_conv = np.linspace(-0.5 * len(result) * dt, 0.5 * len(result) * dt, len(result))
     x_lim_conv = (t_conv[0], t_conv[-1])
     x_values = []
+    # print(result)
     for t_val, r_val in zip(t_conv, result):
         if x_lim_conv[0] <= t_val <= x_lim_conv[1]:
-            if round(r_val, 2) == 0:
+            if round(r_val, 5) == 0:
                 continue
             else:
                 x_values.append(t_val)
