@@ -940,7 +940,7 @@ class App(customtkinter.CTk):
         )
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
-        self.pauseButton.grid(row=3, column=0,padx=(550,10), pady=(10, 10), sticky="w")
+        self.pauseButton.grid(row=3, column=0,padx=(750,10), pady=(10, 10), sticky="w")
 
         self.speed_var = customtkinter.StringVar(value="Medium")
 
