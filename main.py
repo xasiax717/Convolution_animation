@@ -60,13 +60,11 @@ class AnimatedPlot:
             sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
         self.x, self.y, self.xlim = convolution(sig1, sig2, self.dt)
-        print("xlim", self.xlim)
-        print("xlim", self.xlim)
-        print("xmax", xmax)
-        self.xmax = max(xmax, abs(self.xlim)) + 1
-        print("self.xmax", self.xmax)
-        self.ylow = np.min(self.y)
+        self.x = self.x
+        self.y = self.y
 
+        self.xmax = max(xmax, abs(self.xlim[0]), abs(self.xlim[1])) + 1
+        self.ylow = np.min(self.y)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
             self.xmax = xmax
             self.t = np.arange(-self.xmax, self.xmax, self.dt)
@@ -96,10 +94,10 @@ class AnimatedPlot:
 
         self.ax2.set_xlim(-self.xmax, self.xmax)
         num_frames = len(self.x)
-        print(num_frames)
 
-        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames/15), init_func=self.init, blit=True, interval=100)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames/15), init_func=self.init, blit=True, interval=100)
+
+        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames), init_func=self.init, blit=True, interval=50)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames), init_func=self.init, blit=True, interval=50)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
@@ -131,24 +129,7 @@ class AnimatedPlot:
 
         self.anim_running = True
 
-    # def save_animation_as_gif(self, filename, fps=20):
-    #     frames = []
-    #
-    #     for i in range(100):
-    #         self.update(i)
-    #         self.animate(i)
-    #         self.fig.canvas.draw()
-    #         self.fig2.canvas.draw()
-    #
-    #         image1 = Image.frombuffer('RGBA', self.fig.canvas.get_width_height(), self.fig.canvas.buffer_rgba())
-    #         image2 = Image.frombuffer('RGBA', self.fig2.canvas.get_width_height(), self.fig2.canvas.buffer_rgba())
-    #         combined_image = Image.new('RGBA', (image1.width + image2.width, max(image1.height, image2.height)))
-    #         combined_image.paste(image1, (0, 0))
-    #         combined_image.paste(image2, (image1.width, 0))
-    #         frames.append(combined_image)
-    #
-    #     frames[0].save(filename, save_all=True, append_images=frames[1:], optimize=False, duration=1000 / fps, loop=0)
-    #
+
 
     def toggle_pause_animation(self):
         if self.anim_running:
@@ -168,15 +149,20 @@ class AnimatedPlot:
         return self.line, self.line_moving
 
     def update(self, frame):
-        frame_count = 200
+        frame_count = 50
         frame_index = frame * frame_count
         self.line.set_xdata(self.x[:frame_index])
         self.line.set_ydata(self.y[:frame_index])
         return self.line,
 
+
     def animate(self, i):
         # Compute the center of the moving function based on the frame number
-        moving_center = i * self.dt * 100 * 0.5 - self.xmax
+        shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
+
+        shift_caused_by_width = (self.xlim[1] - self.xlim[0] - float(self.signal2.get_width())) / 2
+
+        moving_center = i * self.dt * 100 * 0.5 - self.xmax - float(self.signal1.get_width()) + shift_caused_by_width
 
         if self.signal1.get_type() == "Rectangle":
             self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
@@ -364,7 +350,7 @@ class App(customtkinter.CTk):
 
     def choose_array_size1_event(self, array_size):
         self.x_size = int(array_size)
-        print(array_size)
+        # print(array_size)
         self.discrete_button_event()
 
     def choose_array_size2_event(self, array_size):

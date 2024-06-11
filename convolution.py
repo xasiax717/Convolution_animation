@@ -13,7 +13,7 @@ def square_wave(t, amplitude, shift, width):
     return np.where(np.abs(t + shift) < width / 2, amplitude, 0)
 
 def triangle_wave(t, amplitude, shift, width):
-    return np.where(np.abs(t + shift) < width / 2, amplitude*np.abs(((t-shift) / (width / 2)) % 2 - 1), 0)
+    return np.where(np.abs(t + shift) < width / 2, amplitude * np.abs(((t - shift) / (width / 2)) % 2 - 1), 0)
 
 def exponential_wave(t, amp, tau):
     base = np.exp(1)
@@ -28,19 +28,17 @@ def cosinusoidal_wave(t, A, f, phase):
 def convolution(signal1, signal2, dt):
     result = convolve(signal1, signal2, mode='full') * dt
     t_conv = np.linspace(-0.5 * len(result) * dt, 0.5 * len(result) * dt, len(result))
-    x_lim = (t_conv[0], t_conv[-1])
-    print(x_lim)
-    # print(f"The interval of x values where the convolution exists: {x_lim}")
-    # print(f"Convolution values in the interval:")
+    x_lim_conv = (t_conv[0], t_conv[-1])
+    x_values = []
     for t_val, r_val in zip(t_conv, result):
-        if x_lim[0] <= t_val <= x_lim[1]:
-            print(f"t = {t_val:.2f}, conv = {r_val:.2f}")
-            if round(r_val, 4) == 0:
+        if x_lim_conv[0] <= t_val <= x_lim_conv[1]:
+            if round(r_val, 2) == 0:
                 continue
             else:
-                x_lim0 = t_val
-                break
-    return t_conv, result, x_lim0
+                x_values.append(t_val)
+    x_lim = (min(x_values), max(x_values))
+    return t_conv, result, x_lim
+
 
 def get_convolution_data(signal1_choice, signal2_choice, dt):
     t = np.arange(-10, 10, dt)
