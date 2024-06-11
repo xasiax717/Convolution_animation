@@ -37,6 +37,8 @@ def convolution(signal1, signal2, dt):
             else:
                 x_values.append(t_val)
     x_lim = (min(x_values), max(x_values))
+    # print(min(x_values))
+    # print(max(x_values))
     return t_conv, result, x_lim
 
 

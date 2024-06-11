@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import ttk
 
@@ -129,7 +130,35 @@ class AnimatedPlot:
 
         self.anim_running = True
 
+    def save_static_plot(self, directory):
+        self.fig.canvas.draw()
+        self.fig2.canvas.draw()
 
+        # Save the first figure
+        image1 = Image.frombuffer('RGBA', self.fig.canvas.get_width_height(), self.fig.canvas.buffer_rgba())
+        image1.save(os.path.join(directory, "plot1.png"))
+
+        # Save the second figure
+        image2 = Image.frombuffer('RGBA', self.fig2.canvas.get_width_height(), self.fig2.canvas.buffer_rgba())
+        image2.save(os.path.join(directory, "plot2.png"))
+
+    # def save_animation_as_gif(self, filename, fps=20):
+    #     frames = []
+    #
+    #     for i in range(100):  # Adjust the range based on your animation frames
+    #         self.update(i)
+    #         self.animate(i)
+    #         self.fig.canvas.draw()
+    #         self.fig2.canvas.draw()
+    #
+    #         image1 = Image.frombuffer('RGBA', self.fig.canvas.get_width_height(), self.fig.canvas.buffer_rgba())
+    #         image2 = Image.frombuffer('RGBA', self.fig2.canvas.get_width_height(), self.fig2.canvas.buffer_rgba())
+    #         combined_image = Image.new('RGBA', (image1.width + image2.width, max(image1.height, image2.height)))
+    #         combined_image.paste(image1, (0, 0))
+    #         combined_image.paste(image2, (image1.width, 0))
+    #         frames.append(combined_image)
+    #
+    #     frames[0].save(filename, save_all=True, append_images=frames[1:], optimize=False, duration=1000 / fps, loop=1)
 
     def toggle_pause_animation(self):
         if self.anim_running:
@@ -158,9 +187,12 @@ class AnimatedPlot:
 
     def animate(self, i):
         # Compute the center of the moving function based on the frame number
-        shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
+        #shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
 
-        shift_caused_by_width = (self.xlim[1] - self.xlim[0] - float(self.signal2.get_width())) / 2
+        if self.signal1.get_type() != 'Exponential' and self.signal2.get_type() != 'Exponential':
+            shift_caused_by_width = (self.xlim[1] - self.xlim[0] - float(self.signal2.get_width())) / 2
+        else:
+            shift_caused_by_width = 0
 
         moving_center = i * self.dt * 100 * 0.5 - self.xmax - float(self.signal1.get_width()) + shift_caused_by_width
 
@@ -530,7 +562,10 @@ class App(customtkinter.CTk):
                     setattr(self.signal2, attribute, default_value)
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
-            #self.animated_plot.save_animation_as_gif('animation.gif')
+            self.animated_plot.save_static_plot(directory="C:/Users/Emilia/PycharmProjects/Convolution_animation")
+            #self.animated_plot.save_animation_as_gif
+            #self.animated_plot.save_animation_as_png_sequence(directory="C:/Users/Emilia/PycharmProjects/Convolution_animation")
+
         else:
             return
 
