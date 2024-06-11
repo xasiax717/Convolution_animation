@@ -1,4 +1,5 @@
 import os
+import time
 import tkinter as tk
 from tkinter import ttk
 
@@ -19,7 +20,8 @@ class AnimatedPlot:
     def __init__(self, root, signal1, signal2):
         self.signal1 = signal1
         self.signal2 = signal2
-        self.dt = 0.01
+        self.dt = 0.005
+        self.speed = 1
 
         if signal1.get_type() != 'Exponential' and signal2.get_type() != 'Exponential':
             xmax = max(abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2, abs(float(signal2.get_shift())) + abs(float(signal2.get_width())) / 2)
@@ -97,7 +99,8 @@ class AnimatedPlot:
 
         self.ax2.set_xlim(-self.xmax, self.xmax)
 
-        self.speed = 1
+        self.speed = 3
+        print(self.speed, "poczatek")
         self.frame_count = int(round(len(self.x)/200*self.speed**2, 0))
         self.num_frames = len(self.x)/self.frame_count
         self.anim = FuncAnimation(self.fig, self.update, frames=int(self.num_frames), init_func=self.init, blit=True, interval=50)
@@ -325,6 +328,7 @@ class App(customtkinter.CTk):
         self.h_size = 5
         self.entries_x = []
         self.entries_h = []
+        self.speed_app = 1
 
         # application window, can change size if need
         self.title("convolution animation")
@@ -693,6 +697,20 @@ class App(customtkinter.CTk):
 
     def toggle_start_animation(self):
         self.animated_plot.toggle_start_animation()
+
+    def update_speed(self):
+        speed = self.speed_var.get()
+        if speed == "Low":
+            self.speed = 1
+        elif speed == "Medium":
+            self.speed = 2
+        elif speed == "High":
+            self.speed = 3
+
+        self.animated_plot.speed = self.speed
+
+        print(f"Speed updated to {self.speed}")
+        #self.on_confirm_params_button_click()
     def discrete_button_event(self):
         # create frame of signals type choosing
         self.destroy()
@@ -908,7 +926,7 @@ class App(customtkinter.CTk):
         )
         self.continueButton.bind("<Enter>", self.on_enter_continue)
         self.continueButton.bind("<Leave>", self.on_leave_continue)
-        self.continueButton.grid(column=1, row=3,padx=(10,550), pady=(10, 10), sticky="e")
+        self.continueButton.grid(column=1, row=3, padx=(10,550), pady=(10, 10), sticky="e")
 
         self.pauseButton = customtkinter.CTkButton(
             self.simulation_frame,
@@ -923,6 +941,26 @@ class App(customtkinter.CTk):
         self.pauseButton.bind("<Enter>", self.on_enter_pause)
         self.pauseButton.bind("<Leave>", self.on_leave_pause)
         self.pauseButton.grid(row=3, column=0,padx=(550,10), pady=(10, 10), sticky="w")
+
+        self.speed_var = customtkinter.StringVar(value="Medium")
+
+        self.speed_label = customtkinter.CTkLabel(master=self.simulation_frame, text="Speed: ", width=70,
+                                                   height=10, font=font)
+        self.speed_label.grid(row=3, column=0, pady=10, padx=(0, 10))
+
+        self.low_speed_rb = customtkinter.CTkRadioButton(
+            self.simulation_frame, text="Low", variable=self.speed_var, value="Low",command=self.update_speed)
+        self.low_speed_rb.grid(row=3, column=0, pady=10, padx=(200, 10))
+
+        self.medium_speed_rb = customtkinter.CTkRadioButton(
+            self.simulation_frame, text="Medium", variable=self.speed_var, value="Medium", command=self.update_speed)
+        self.medium_speed_rb.grid(row=3, column=0, pady=10, padx=(400, 10))
+
+        self.high_speed_rb = customtkinter.CTkRadioButton(
+            self.simulation_frame, text="High", variable=self.speed_var, value="High", command=self.update_speed)
+        self.high_speed_rb.grid(row=3, column=0, pady=10, padx=(600, 10))
+
+
 
         def on_enter_pause(self, event):
             pause_img_hover = Image.open('resources/pause_hover_red.png')
