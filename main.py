@@ -97,8 +97,8 @@ class AnimatedPlot:
 
         self.ax2.set_xlim(-self.xmax, self.xmax)
 
-        self.speed = 3
-        self.frame_count = int(len(self.x)/200*self.speed**2)
+        self.speed = 1
+        self.frame_count = int(round(len(self.x)/200*self.speed**2, 0))
         self.num_frames = len(self.x)/self.frame_count
         self.anim = FuncAnimation(self.fig, self.update, frames=int(self.num_frames), init_func=self.init, blit=True, interval=50)
         self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(self.num_frames), init_func=self.init, blit=True, interval=50)
