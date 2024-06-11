@@ -1,6 +1,7 @@
 import os
 import time
 import tkinter as tk
+import random
 from tkinter import ttk
 
 import customtkinter
@@ -9,7 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from convolution import convolution, triangle_wave, square_wave, exponential_wave, sinusoidal_wave, cosinusoidal_wave
-from discrete import create_rounded_rectangle, draw_array, init_animation, update_animation
+from discrete import init_animation, update_animation, pause_animation, resume_animation, next_step_animation, restart_animation
+
 from PIL import Image, ImageTk
 
 
@@ -107,11 +109,11 @@ class AnimatedPlot:
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=10, columnspan=2, sticky="nsew")
+        self.canvas.get_tk_widget().grid(row=0, column=0, padx=10, pady=(10, 10), columnspan=2, sticky="nsew")
         self.canvas.draw()
 
         self.canvas2 = FigureCanvasTkAgg(self.fig2, master=root)
-        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=10, columnspan=2, sticky="nsew")
+        self.canvas2.get_tk_widget().grid(row=1, column=0, padx=10, pady=0, columnspan=2, sticky="nsew")
         self.canvas2.draw()
 
         amp1 = float(self.signal1.get_amplitude())
@@ -315,6 +317,60 @@ class Signal1:
         return self.rate
 
 
+class TitlePage(customtkinter.CTk):
+    def __init__(self):
+        super().__init__()
+
+        self.title("Title Page")
+        self.geometry("800x600")
+
+        # Logo
+        logo_image = Image.open("resources/logo.png").resize((90, 50))
+        logo_photo = ImageTk.PhotoImage(logo_image)
+        logo_label = customtkinter.CTkLabel(self, image=logo_photo, text="")
+        logo_label.image = logo_photo
+        logo_label.pack(pady=10)
+
+        title_font = customtkinter.CTkFont(family="Helvetica", size=32, weight="bold")
+
+        title_label = customtkinter.CTkLabel(self, text="We Are Enough", font=title_font)
+        title_label.pack(pady=10)
+
+        project_label = customtkinter.CTkLabel(self, text="Project Name: Convolution Animation", font=("Helvetica", 24))
+        project_label.pack(pady=5)
+
+        university_label = customtkinter.CTkLabel(self, text="Warsaw University of Technologies",
+                                                  font=("Helvetica", 20))
+        university_label.pack(pady=5)
+
+        team_title_label = customtkinter.CTkLabel(self, text="Names of our team:", font=("Helvetica", 20, "bold"))
+        team_title_label.pack(pady=10)
+
+        team_members = [
+            "Joanna Brodnicka (Product Owner)",
+            "Zofia Lewkowicz (Scrum Master)",
+            "Emilia Janczarska (Naczelny Developer Kraju)",
+            "Zuzanna Górecka (Bober)",
+            "Dana Betsina (Kluska)"
+        ]
+
+        for member in team_members:
+            member_label = customtkinter.CTkLabel(self, text=member, font=("Helvetica", 16))
+            member_label.pack()
+
+        welcome_label = customtkinter.CTkLabel(self, text="Hello and welcome to our application!",
+                                               font=("Helvetica", 20))
+        welcome_label.pack(pady=20)
+
+        start_button = customtkinter.CTkButton(self, text="Start", command=self.start_application)
+        start_button.pack(pady=20)
+
+    def start_application(self):
+        self.destroy()
+        app = App()
+        app.mainloop()
+
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
@@ -327,7 +383,17 @@ class App(customtkinter.CTk):
         self.h_size = 5
         self.entries_x = []
         self.entries_h = []
+        self.button_discrete_mode = "Discrete"
+        self.max_delay = 2000  # Maximum delay in milliseconds
+        self.initial_delay = 500  # Initial delay in milliseconds
+        self.y = []  # Initialize y here
+        self.colors = ['#FFC0CB', '#40f4cd', '#faa009', '#d20057', '#135bb9', '#ffd700']
+        self.continue_event = True
         self.speed = 2
+        self.is_mode_kenaugh = False
+
+        # Store the original colors
+        self.original_bg_color = self.cget("fg_color")
 
         # application window, can change size if need
         self.title("convolution animation")
@@ -347,50 +413,155 @@ class App(customtkinter.CTk):
 
         self.sidebar_frame = customtkinter.CTkFrame(self, width=110, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(4, weight=1)
+        self.grid_rowconfigure(5, weight=1)
+        custom_font = customtkinter.CTkFont(family="Times New Roman", size=15, weight="bold")
 
+        self.title_label = customtkinter.CTkLabel(self.sidebar_frame, text="Convolution Animation",
+                                                       font=custom_font)
+        self.title_label.grid(row=0, column=0, padx=10, pady=10)
         self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, command=self.main_button_event, text="Main")
         self.sidebar_button_1.grid(row=1, column=0, padx=10, pady=10)
-        self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, command=self.about_button_event,
-                                                        text="About")
+        self.sidebar_button_2 = customtkinter.CTkButton(self.sidebar_frame, command=self.about_button_event, text="About")
         self.sidebar_button_2.grid(row=2, column=0, padx=10, pady=10)
         self.sidebar_button_3 = customtkinter.CTkButton(self.sidebar_frame, command=self.help_button_event, text="Help")
         self.sidebar_button_3.grid(row=3, column=0, padx=10, pady=10)
-        self.toggle_discrete_button = customtkinter.CTkButton(self.sidebar_frame, command=self.discrete_button_event, text="Discrete", fg_color="red")
+        self.toggle_discrete_button = customtkinter.CTkButton(self.sidebar_frame, command=self.discrete_button_activator, text=self.button_discrete_mode, fg_color="red")
         self.toggle_discrete_button.grid(row=4, column=0, padx=20, pady=10)
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=5, column=0, padx=10, pady=(10, 0))
-        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame,
-                                                                       values=["System","Light", "Dark"],
-                                                                       command=self.change_appearance_mode_event)
-        self.appearance_mode_optionemenu.grid(row=6, column=0, padx=10, pady=(10, 10))
+        self.appearance_mode_label.grid(row=6, column=0, padx=10, pady=(10, 0))
+        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["System", "Light", "Dark"], command=self.change_appearance_mode_event)
+        self.appearance_mode_optionemenu.grid(row=7, column=0, padx=10, pady=(10, 10))
         self.scaling_label = customtkinter.CTkLabel(self.sidebar_frame, text="UI Scaling:", anchor="w")
-        self.scaling_label.grid(row=7, column=0, padx=10, pady=(10, 0))
+        self.scaling_label.grid(row=8, column=0, padx=10, pady=(10, 0))
         self.scaling_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame,
                                                                values=["80%", "90%", "100%", "110%", "120%"],
                                                                command=self.change_scaling_event)
         self.scaling_optionemenu.set("100%")
-        self.scaling_optionemenu.grid(row=8, column=0, padx=10, pady=(10, 20))
+        self.scaling_optionemenu.grid(row=9, column=0, padx=10, pady=(10, 20))
         self.main_button_event()
 
         self.set_icon()
+        self.original_sidebar_color = self.sidebar_frame.cget("fg_color")
+        self.original_button_colors = {
+            self.sidebar_button_1: self.sidebar_button_1.cget("fg_color"),
+            self.sidebar_button_2: self.sidebar_button_2.cget("fg_color"),
+            self.sidebar_button_3: self.sidebar_button_3.cget("fg_color"),
+        }
+        self.original_optionmenu_colors = {
+            self.appearance_mode_optionemenu: (self.appearance_mode_optionemenu.cget("fg_color"), self.appearance_mode_optionemenu.cget("button_color"), self.appearance_mode_optionemenu.cget("button_hover_color")),
+            self.scaling_optionemenu: (self.scaling_optionemenu.cget("fg_color"), self.scaling_optionemenu.cget("button_color"), self.scaling_optionemenu.cget("button_hover_color"))
+        }
 
     def set_icon(self):
-        # Load the image
         image_path = "resources/logo.png"
         image = Image.open(image_path)
-        image = image.resize((90, 50), Image.Resampling.LANCZOS)
+        image = image.resize((120, 67), Image.Resampling.LANCZOS)
         photo = ImageTk.PhotoImage(image)
 
-        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, image=photo, text="")
-        self.logo_label.image = photo  # keep a reference to the image to prevent garbage collection
-        self.logo_label.grid(row=0, column=0, padx=10, pady=(20, 10))
-        self.iconphoto(False, photo)
+        self.logo_label = customtkinter.CTkButton(
+            self.sidebar_frame,
+            command=self.change_kenaugh_mode,
+            image=photo,
+            text="",
+            hover=False,
+            fg_color="transparent"
+            )
+        self.logo_label.image = photo
+        self.logo_label.grid(row=5, column=0, padx=10, pady=(170,170))
+        self.iconphoto(True, photo)
+
+    def colorChange(self, bg_color, fg_color):
+        for frame in self.modifying_frames:
+            frame.configure(fg_color=fg_color)
+        self.sidebar_frame.configure(fg_color=fg_color)
+        self.configure(fg_color=bg_color)
+
+    def buttonsColorChange(self, fg_color, button_color, hover_color):
+        # Iterate over all buttons and configure their foreground color
+        for widget in [self.sidebar_button_1, self.sidebar_button_2, self.sidebar_button_3]:
+            widget.configure(fg_color=fg_color, hover_color=hover_color)
+        for widget in [self.appearance_mode_optionemenu, self.scaling_optionemenu]:
+            widget.configure(fg_color=fg_color, button_color=button_color, button_hover_color=hover_color)
+
+    def change_kenaugh_mode(self):
+        customtkinter.set_appearance_mode("Light")
+        self.is_mode_kenaugh = True
+
+        self.colorChange("white", "#f1c6db")
+        self.buttonsColorChange("#f300a2", "#30aefd", "#3559E0")
+        self.randomKisses()
+
+    def reset_to_original_colors(self):
+        self.colorChange(self.original_bg_color, self.original_sidebar_color)
+        for widget, original_color in self.original_button_colors.items():
+            widget.configure(fg_color=original_color)
+        for widget, (fg_color, button_color, hover_color) in self.original_optionmenu_colors.items():
+            widget.configure(fg_color=fg_color, button_color=button_color, button_hover_color=hover_color)
+
+    def change_appearance_mode_event(self, new_appearance_mode: str):  # change color scheme of app
+        if self.is_mode_kenaugh:
+            self.reset_to_original_colors()
+            self.is_mode_kenaugh = False
+            try:
+                self.nails_button.destroy()
+                self.pause_continue_button = customtkinter.CTkButton(self.simulation_frame, text="Pause",
+                                                                     command=self.toggle_pause_continue)
+                self.pause_continue_button.grid(row=2, column=1, pady=20, padx=(300, 10))
+            except:
+                ...
+        customtkinter.set_appearance_mode(new_appearance_mode)
+
+    def randomKisses(self):
+        self.labelsKisses = []
+        for i in range(50):
+            # Schedule the creation of each kiss label with a delay
+            self.after(i * 50, self.createKiss)
+        # Schedule the fading of kiss labels after 5 seconds
+        self.after(5000, self.startFadingKisses)
+
+    def createKiss(self):
+        x = random.randint(0, self.winfo_screenwidth() - 50)
+        y = random.randint(0, self.winfo_screenheight() - 50)
+        kiss = customtkinter.CTkLabel(self, text="💋", font=customtkinter.CTkFont(size=50))
+        kiss.place(x=x, y=y)
+        # Initial alpha value for fading
+        kiss.alpha = 1.0
+        self.labelsKisses.append(kiss)
+
+    def startFadingKisses(self):
+        for label in self.labelsKisses:
+            self.fade_label(label)  # Start the fading process for each label
+
+    def fade_label(self, label):
+        if label.alpha > 0:
+            label.alpha -= 0.01
+            new_color = f"#{int(label.alpha * 255):02x}0000"  # Blend with the background color (assuming background is black)
+            label.configure(fg_color=new_color)  # Update the label's color
+            # Schedule the next fading step after a short delay
+            self.after(50, self.fade_label, label)
+        else:
+            label.destroy()
+    def on_enter_nails(self, event):
+        self.nails_button.configure(text="💅🏿")
+
+    def on_leave_nails(self, event):
+        self.nails_button.configure(text="💅🏻")
+
+    def discrete_button_activator(self):
+        if self.button_discrete_mode == "Discrete":
+            self.button_discrete_mode = "Functions"
+            self.toggle_discrete_button.configure(text="Functions")
+            self.discrete_button_event()
+        else:
+            self.button_discrete_mode = "Discrete"
+            self.toggle_discrete_button.configure(text="Discrete")
+            self.main_button_event()
+
     def add_title_label(self):
         title_label = tk.Label(self, text="Convolution animation", font=("Helvetica", 16))
         title_label.pack(pady=10)
-    def change_appearance_mode_event(self, new_appearance_mode: str):  # change color scheme of app
-        customtkinter.set_appearance_mode(new_appearance_mode)
+
+
 
     def change_scaling_event(self, new_scaling: str):  # change size of elements on the frame
         new_scaling_float = int(new_scaling.replace("%", "")) / 100
@@ -412,20 +583,6 @@ class App(customtkinter.CTk):
     def choose_array_size2_event(self, array_size):
         self.h_size = int(array_size)
         self.discrete_button_event()
-
-    def start_animation(self):
-        colors = ['#FFC0CB', '#40f4cd', '#faa009', '#d20057', '#135bb9', '#ffd700']
-        x_values = [int(entry.get()) for entry in self.entries_x]
-        h_values = [int(entry.get()) for entry in self.entries_h]
-        global x, h, y, n, x_padded, h_padded
-        x = np.array(x_values)
-        h = np.array(h_values)
-        y = []
-        n = len(x) + len(h) - 1
-        x_padded = np.pad(x, (0, len(h) - 1), 'constant')
-        h_padded = np.pad(h, (0, len(x) - 1), 'constant')
-        init_animation(self.canvas, x, h, 50, 150, 50, 250)
-        self.canvas.after(1000, update_animation, self.canvas, 0, x, h, 50, 150, 50, 250, 50, 50, colors, y)
 
 
     def on_confirm_params_button_click(self):  # check do all the parameters have the required format and then set it into signals classes
@@ -591,6 +748,7 @@ class App(customtkinter.CTk):
             except:
                 ...
 
+            self.simulation_button_event()
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2, self.speed)
             # self.animated_plot.save_static_plot(directory="C:/Users/Emilia/PycharmProjects/Convolution_animation")
             #self.animated_plot.save_animation_as_gif
@@ -653,6 +811,8 @@ class App(customtkinter.CTk):
                 return False
         except ValueError:
             return False
+
+
     def check_width(self, value):
         try:
             float_value = float(value)
@@ -664,39 +824,83 @@ class App(customtkinter.CTk):
                 return False
         except ValueError:
             return False
-    def on_enter_continue(self, event):  # hover image continue button
-        light_image = Image.open('resources/continue_hover_blue.png')
-        photo_light_image = customtkinter.CTkImage(light_image)
-        self.continueButton.configure(image=photo_light_image)
-        self.continueButton.configure(fg_color='transparent')
 
-    def on_leave_continue(self, event):
-        image = Image.open('resources/continue_blue.png')
-        photo_image = customtkinter.CTkImage(image)
-        self.continueButton.configure(image=photo_image)
-        self.continueButton.configure(fg_color='transparent')
-
-    def on_enter_pause(self, event):  # hover image pause button
-        pause_img = Image.open('resources/pause_hover_red.png')
-        pause_photo_img = customtkinter.CTkImage(pause_img)
-        self.pauseButton.configure(image=pause_photo_img)
-        self.pauseButton.configure(fg_color='transparent')
-
-    def on_leave_pause(self, event):
-        pause_img = Image.open('resources/pause_50.png')
-        pause_photo_img = customtkinter.CTkImage(pause_img)
-        self.pauseButton.configure(image=pause_photo_img)
-        self.pauseButton.configure(fg_color='transparent')
 
     def destroy(self):
         for frame in self.modifying_frames:
             frame.destroy()
-
     def toggle_pause_animation(self):
-        self.animated_plot.toggle_pause_animation()
+        if self.continue_event:
+            self.pauseButton.configure(text="Continue")
+            self.continue_event = False
+        else:
+            self.pauseButton.configure(text="Pause")
+            self.continue_event = True
 
-    def toggle_start_animation(self):
-        self.animated_plot.toggle_start_animation()
+        if self.continue_event:
+            self.animated_plot.toggle_start_animation()
+        else:
+            self.animated_plot.toggle_pause_animation()
+
+    def toggle_pause_continue(self):
+        if not self.is_mode_kenaugh:
+            if self.animated_plot.anim_running:
+                self.pause_continue_button.configure(text="Continue")
+                self.animated_plot.toggle_pause_animation()
+            else:
+                self.pause_continue_button.configure(text="Pause")
+                self.animated_plot.toggle_start_animation()
+        else:
+            if self.animated_plot.anim_running:
+                self.animated_plot.toggle_pause_animation()
+            else:
+                self.animated_plot.toggle_start_animation()
+
+    def confirm_discrete_parameters(self):
+        valid_values = True
+        for x_entry, h_entry in zip(self.entries_x, self.entries_h):
+            if not self.check_discrete_value(x_entry.get()):
+                x_entry.configure(fg_color='red')
+                valid_values = False
+            else:
+                x_entry.configure(fg_color=self.current_fg_color)
+
+            if not self.check_discrete_value(h_entry.get()):
+                h_entry.configure(fg_color='red')
+                valid_values = False
+            else:
+                x_entry.configure(fg_color=self.current_fg_color)
+        if valid_values:
+            self.start_discrete_animation()
+        else:
+            self.show_message_box("Invalid Input",
+                                  "Please enter valid value (max 2 decimal places, [-1000, 1000]).")
+
+    def check_discrete_value(self, value):
+        try:
+            float_value = float(value)
+
+            if -100 <= float_value <= 100 and (
+                    '{:.0f}'.format(float_value) == value or '{:.1f}'.format(float_value) == value):
+                return True
+            else:
+                return False
+        except ValueError:
+            return False
+    def start_discrete_animation(self):
+        colors = ['#FFC0CB', '#40f4cd', '#faa009', '#d20057', '#135bb9', '#ffd700']
+        x_values = [float(entry.get()) for entry in self.entries_x]
+        h_values = [float(entry.get()) for entry in self.entries_h]
+        global x, h, n, x_padded, h_padded
+        x = np.array(x_values)
+        h = np.array(h_values)
+        self.y = []  # Use self.y
+        n = len(x) + len(h) - 1
+        x_padded = np.pad(x, (0, len(h) - 1), 'constant')
+        h_padded = np.pad(h, (0, len(x) - 1), 'constant')
+        init_animation(self.canvas, x, h, 50, 125, 25, 225)
+        self.canvas.after(1000, update_animation, self.canvas, 0, x, h, 50, 125, 50, 225, 50, 25, colors, self.y, self.speed_slider, self.max_delay)
+
 
     def update_speed(self):
         speed = self.speed_var.get()
@@ -712,8 +916,7 @@ class App(customtkinter.CTk):
         self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2, speed_val)
 
     def discrete_button_event(self):
-        # create frame of signals type choosing
-        self.destroy()
+        self.destroy_modifying_frames()
         self.entries_x = []
         self.entries_h = []
         self.arrays_size_frame = customtkinter.CTkFrame(self)
@@ -721,24 +924,18 @@ class App(customtkinter.CTk):
         self.arrays_size_frame.grid(row=0, column=1, padx=(20, 10), pady=(20, 0), sticky="nsew")
         # todo: change the font
         font = customtkinter.CTkFont(size=15)
-        self.label_type_1 = customtkinter.CTkLabel(master=self.arrays_size_frame, text="Choose 1 array size", width=70,
-                                                   height=10, font=font)
+        self.label_type_1 = customtkinter.CTkLabel(master=self.arrays_size_frame, text="Choose 1 array size", width=70, height=10, font=font)
         self.label_type_1.grid(row=0, column=0, padx=20, pady=20)
         optionmenu_var_1 = customtkinter.StringVar(value=self.x_size)  # set initial value
 
-        self.optionmenu_1 = customtkinter.CTkOptionMenu(self.arrays_size_frame, dynamic_resizing=False,
-                                                        values=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], width=100, height=20,
-                                                        command=self.choose_array_size1_event, variable=optionmenu_var_1)
+        self.optionmenu_1 = customtkinter.CTkOptionMenu(self.arrays_size_frame, dynamic_resizing=False, values=['1', '2', '3', '4', '5', '6'], width=100, height=20, command=self.choose_array_size1_event, variable=optionmenu_var_1)
 
         self.optionmenu_1.grid(row=1, column=0, padx=20, pady=(0, 10))
-        self.label_type_2 = customtkinter.CTkLabel(master=self.arrays_size_frame, text="Choose 2 array size", width=70,
-                                                   height=25, font=font)
+        self.label_type_2 = customtkinter.CTkLabel(master=self.arrays_size_frame, text="Choose 2 array size", width=70, height=25, font=font)
         self.label_type_2.grid(row=0, column=1, padx=20, pady=10)
         optionmenu_var_2 = customtkinter.StringVar(value=self.h_size)  # set initial value
 
-        self.optionmenu_2 = customtkinter.CTkOptionMenu(self.arrays_size_frame, dynamic_resizing=False,
-                                                        values=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], width=100, height=20,
-                                                        command=self.choose_array_size2_event, variable=optionmenu_var_2)
+        self.optionmenu_2 = customtkinter.CTkOptionMenu(self.arrays_size_frame, dynamic_resizing=False, values=['1', '2', '3', '4', '5', '6'], width=100, height=20, command=self.choose_array_size2_event, variable=optionmenu_var_2)
 
         self.optionmenu_2.grid(row=1, column=1, padx=20, pady=(5, 10))
 
@@ -764,8 +961,7 @@ class App(customtkinter.CTk):
             entry = customtkinter.CTkEntry(master=self.signals_parameters_frame, width=50, height=50)
             entry.grid(row=1, column=i, padx=1, pady=10)
             self.entries_x.append(entry)
-        self.label2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Enter array 2 parameters:",
-                                             font=font)
+        self.label2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Enter array 2 parameters:", font=font)
         self.label2.grid(row=3, column=0, columnspan=cs, pady=(20, 0))
 
         for i in range(self.h_size):
@@ -773,8 +969,7 @@ class App(customtkinter.CTk):
             entry.grid(row=4, column=i, padx=1, pady=10)
             self.entries_h.append(entry)
 
-        self.start_button = customtkinter.CTkButton(master=self.signals_parameters_frame, text="Start Animation",
-                                                    command=self.start_animation)
+        self.start_button = customtkinter.CTkButton(master=self.signals_parameters_frame, text="Start Animation", command=self.confirm_discrete_parameters)
         self.start_button.grid(row=5, column=0, columnspan=cs, pady=10)
         # create the simulation frame
         self.simulation_frame = customtkinter.CTkFrame(self)
@@ -783,6 +978,23 @@ class App(customtkinter.CTk):
         self.canvas = tk.Canvas(self.simulation_frame, width=1200, height=300)
         self.canvas.grid(row=0, column=0, padx=10, pady=10)
 
+        self.pause_button = customtkinter.CTkButton(master=self.simulation_frame, text="Pause", command=pause_animation)
+        self.pause_button.grid(row=1, column=0, padx=(350,10), pady=10, sticky="w")
+
+        self.resume_button = customtkinter.CTkButton(master=self.simulation_frame, text="Resume", command=lambda: resume_animation(self.canvas, len(self.y), x, h, 50, 150, 50, 250, 50, 50, self.colors, self.y, self.speed_slider, self.max_delay))
+        self.resume_button.grid(row=1, column=0, padx=10, pady=10, sticky="n")
+
+        self.next_step_button = customtkinter.CTkButton(master=self.simulation_frame, text="Next Step", command=lambda: next_step_animation(self.canvas, x, h, 50, 150, 50, 250, 50, 50, self.colors, self.y, self.speed_slider, self.max_delay))
+        self.next_step_button.grid(row=1, column=0, padx=(10,350), pady=10, sticky="e")
+
+        self.speed_slider = tk.Scale(self.simulation_frame, from_=0, to=self.max_delay, orient=tk.HORIZONTAL, label="Speed (ms per step)")
+        self.speed_slider.set(self.initial_delay)
+        self.speed_slider.grid(row=2, column=0, padx=10, pady=10)
+
+    def destroy_modifying_frames(self):
+        for frame in self.modifying_frames:
+            frame.destroy()
+        self.modifying_frames = []
     def main_button_event(self):  # frame activated when main is chosen
         # create frame of signals type choosing
         self.destroy()
@@ -898,81 +1110,51 @@ class App(customtkinter.CTk):
         self.confirm_params_button = customtkinter.CTkButton(self.signals_parameters_frame,
                                                              text="Confirm parameters",
                                                              command=self.on_confirm_params_button_click)
-        self.confirm_params_button.grid(row=3, column=0, columnspan = 7, pady=(20, 20))
+        self.confirm_params_button.grid(row=3, column=0, columnspan=7, pady=(20, 20))
 
-
+    def simulation_button_event(self):
         # create the simulation frame
         self.simulation_frame = customtkinter.CTkFrame(self, height=1000)
         self.modifying_frames.append(self.simulation_frame)  # Allow the graph to expand horizontally
-        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx = (20,10), pady=(20, 0), sticky="nsew")
-        # top text
-        continue_img = Image.open('resources/continue_blue.png')
-        continue_photo_img = customtkinter.CTkImage(continue_img)
-        pause_img = Image.open('resources/pause_50.png')
-        pause_photo_img = customtkinter.CTkImage(pause_img)
+        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx=(20, 10), pady=(20, 0), sticky="nsew")
+        if self.is_mode_kenaugh:
+            self.nails_button = customtkinter.CTkButton(
+                self.simulation_frame,
+                text="💅🏻",
+                border_width=0,
+                width=50,
+                fg_color='transparent',
+                font=customtkinter.CTkFont(size=25),
+                hover=False,
+                command=self.toggle_pause_continue
+            )
+            self.nails_button.bind("<Enter>", self.on_enter_nails)
+            self.nails_button.bind("<Leave>", self.on_leave_nails)
+            self.nails_button.grid(row=2, column=1, pady=0, padx=(300,10))
 
+        else:
 
-        # self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
-
-        self.continueButton = customtkinter.CTkButton(
-            self.simulation_frame,
-            text='',
-            image=continue_photo_img,
-            border_width=0,
-            width=50,
-            fg_color='transparent',
-            hover=False,
-            command=self.toggle_start_animation
-        )
-        self.continueButton.bind("<Enter>", self.on_enter_continue)
-        self.continueButton.bind("<Leave>", self.on_leave_continue)
-        self.continueButton.grid(column=1, row=3, padx=(10,550), pady=(10, 10), sticky="e")
-
-        self.pauseButton = customtkinter.CTkButton(
-            self.simulation_frame,
-            text='',
-            image=pause_photo_img,
-            border_width=0,
-            width=50,
-            fg_color='transparent',
-            hover=False,
-            command=self.toggle_pause_animation
-        )
-        self.pauseButton.bind("<Enter>", self.on_enter_pause)
-        self.pauseButton.bind("<Leave>", self.on_leave_pause)
-        self.pauseButton.grid(row=3, column=0,padx=(550,10), pady=(10, 10), sticky="w")
-
+            self.pause_continue_button = customtkinter.CTkButton(self.simulation_frame, text="Pause",
+                                                             command=self.toggle_pause_continue)
+            self.pause_continue_button.grid(row=2, column=1, pady=20, padx=(300,10))
         self.speed_var = customtkinter.StringVar(value="Medium")
 
         self.speed_label = customtkinter.CTkLabel(master=self.simulation_frame, text="Speed: ", width=70,
-                                                   height=10, font=font)
-        self.speed_label.grid(row=3, column=0, pady=10, padx=(0, 100), sticky="w")
+                                                   height=10)
+        self.speed_label.grid(row=2, column=0, pady=0, padx=(0, 100), sticky="w")
 
         self.low_speed_rb = customtkinter.CTkRadioButton(
             self.simulation_frame, text="Low", variable=self.speed_var, value="Low",command=self.update_speed)
-        self.low_speed_rb.grid(row=3, column=0, pady=10, padx=(100, 500))
+        self.low_speed_rb.grid(row=2, column=0, pady=0, padx=(100, 500))
 
         self.medium_speed_rb = customtkinter.CTkRadioButton(
             self.simulation_frame, text="Medium", variable=self.speed_var, value="Medium", command=self.update_speed)
-        self.medium_speed_rb.grid(row=3, column=0, pady=10, padx=(100, 300))
+        self.medium_speed_rb.grid(row=2, column=0, pady=0, padx=(100, 300))
 
         self.high_speed_rb = customtkinter.CTkRadioButton(
             self.simulation_frame, text="High", variable=self.speed_var, value="High", command=self.update_speed)
-        self.high_speed_rb.grid(row=3, column=0, pady=10, padx=(100, 100))
+        self.high_speed_rb.grid(row=2, column=0, pady=0, padx=(100, 100))
 
-
-
-        def on_enter_pause(self, event):
-            pause_img_hover = Image.open('resources/pause_hover_red.png')
-            pause_photo_img_hover = customtkinter.CTkImage(pause_img_hover)
-            self.pauseButton.configure(image=pause_photo_img_hover)
-            self.pauseButton.configure(fg_color='transparent')
-
-        def on_leave_pause(self, event):
-            pause_img = Image.open('resources/pause_50.png')
-            pause_photo_img = customtkinter.CTkImage(pause_img)
-            self.pauseButton.configure(image=pause_photo_img)
-            self.pauseButton.configure(fg_color='transparent')
 
 
     def help_button_event(self):
@@ -1023,6 +1205,5 @@ class App(customtkinter.CTk):
         self.quit()
 
 if __name__ == "__main__":
-    app = App()
-    app.protocol("WM_DELETE_WINDOW", app.on_closing)
-    app.mainloop()
+    title_page = TitlePage()
+    title_page.mainloop()

@@ -2,6 +2,8 @@ import numpy as np
 import tkinter as tk
 
 colors = ['#FFC0CB', '#40f4cd', '#faa009', '#d20057', '#135bb9', '#ffd700']
+paused = False
+animation_running = True
 
 def create_rounded_rectangle(canvas, x1, y1, x2, y2, radius=25, fill='black'):
     canvas.create_arc(x1, y1, x1 + 2 * radius, y1 + 2 * radius, start=90, extent=90, style=tk.ARC, outline=fill)
@@ -14,8 +16,8 @@ def create_rounded_rectangle(canvas, x1, y1, x2, y2, radius=25, fill='black'):
     canvas.create_line(x2, y1 + radius, x2, y2 - radius, fill=fill)
 
 def draw_array(canvas, array, start_x, start_y, label, current=None):
-    cell_width = 38
-    cell_height = 38
+    cell_width = 60
+    cell_height = 60
     for i, value in enumerate(array):
         x0 = start_x + i * cell_width
         y0 = start_y
@@ -30,13 +32,23 @@ def draw_array(canvas, array, start_x, start_y, label, current=None):
 
 def init_animation(canvas, x, h, x_start_x, x_start_y, h_start_x, h_start_y):
     canvas.delete("all")
-    draw_array(canvas, x, x_start_x + (len(h)) * 38, x_start_y, 'x[n]')
+    draw_array(canvas, x, x_start_x + (len(h)) * 60, x_start_y, 'x[n]')
     draw_array(canvas, h, h_start_x, h_start_y, 'h[n]')
 
-def update_animation(canvas, k, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, y):
-    cell_width = 38
-    cell_height = 38
+def update_animation(canvas, k, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, y, speed_slider, max_delay, step_by_step=False):
+    global paused, animation_running
+    if paused and not step_by_step:
+        return
+
+    cell_width = 60
+    cell_height = 60
     n = len(x) + len(h) - 1
+
+    if k >= n:
+        animation_running = False
+        canvas.after(2000, restart_animation, canvas, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, speed_slider, max_delay)
+        return
+
     x_padded = np.pad(x, (0, len(h) - 1), 'constant')
     h_padded = np.pad(h, (0, len(x) - 1), 'constant')
 
@@ -76,8 +88,40 @@ def update_animation(canvas, k, x, h, x_start_x, x_start_y, h_start_x, h_start_y
         if k - i < len(h):
             y_el += x[i] * h[k - i]
 
-    y.append(y_el)
+    if k < len(y):
+        y[k] = y_el
+    else:
+        y.append(y_el)
 
     draw_array(canvas, y, y_start_x + (len(h)) * cell_width, y_start_y, 'y[n]', current=k)
     if k < n - 1:
-        canvas.after(500, update_animation, canvas, k + 1, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, y)
+        if step_by_step:
+            update_animation.next_k = k + 1
+        else:
+            delay = max_delay - speed_slider.get()
+            canvas.after(delay, update_animation, canvas, k + 1, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, y, speed_slider, max_delay)
+
+def pause_animation():
+    global paused
+    paused = True
+
+def resume_animation(canvas, k, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, y, speed_slider, max_delay):
+    global paused, animation_running
+    if animation_running:
+        paused = False
+        update_animation(canvas, k, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, y, speed_slider, max_delay)
+
+def next_step_animation(canvas, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, y, speed_slider, max_delay):
+    global paused
+    if paused:
+        k = getattr(update_animation, 'next_k', 0)
+        update_animation(canvas, k, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, y, speed_slider, max_delay, step_by_step=True)
+
+def restart_animation(canvas, x, h, y, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, speed_slider, max_delay):
+    global paused, animation_running
+    paused = False
+    animation_running = True
+    y.clear()
+    init_animation(canvas, x, h, x_start_x, x_start_y, h_start_x, h_start_y)
+    update_animation.next_k = 0  # Reset the next step index
+    canvas.after(500, update_animation, canvas, 0, x, h, x_start_x, x_start_y, h_start_x, h_start_y, y_start_x, y_start_y, colors, y, speed_slider, max_delay)
