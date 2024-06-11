@@ -64,22 +64,20 @@ class AnimatedPlot:
         # self.x = self.x
         # self.y = self.y
 
-        self.xmax = max(xmax, abs(self.xlim[0]), abs(self.xlim[1])) + 1
+        self.xmax = max(xmax, abs(self.xlim[0]), abs(self.xlim[1]))
         self.ylow = np.min(self.y)
         self.yhigh = np.max(self.y)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
             self.xmax = xmax
-            self.t = np.arange(-self.xmax, self.xmax, self.dt)
-
+            self.t = np.arange(self.x[0], self.x[-1], self.dt)
         else:
-            self.xmax = self.xmax
-            self.t = np.arange(-self.xmax, self.xmax, self.dt)
+            self.t = np.arange(self.x[0], self.x[-1], self.dt)
 
         # Initialize the plot
 
         self.fig, self.ax = plt.subplots(figsize=(5, 3))
         self.line, = self.ax.plot(self.x, self.y)
-        self.ax.set_xlim(-self.xmax, self.xmax)
+        self.ax.set_xlim(-self.xmax-1, self.xmax+1)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
             self.ax.set_ylim(self.ylow, self.yhigh/2)
 
@@ -97,9 +95,9 @@ class AnimatedPlot:
         self.ax2.set_xlim(-self.xmax, self.xmax)
         num_frames = len(self.x)
 
-
-        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames), init_func=self.init, blit=True, interval=50)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames), init_func=self.init, blit=True, interval=50)
+        print(len(self.x), len(self.t))
+        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames), init_func=self.init, blit=True, interval=1000)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames), init_func=self.init, blit=True, interval=1000)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
@@ -127,7 +125,7 @@ class AnimatedPlot:
             ylim2 = amp1 + 0.2
         plt.ylim(ylim1, ylim2)
 
-        plt.xlim(-self.xmax, self.xmax)
+        plt.xlim(-self.xmax -1, self.xmax + 1)
 
         self.anim_running = True
 
@@ -186,16 +184,16 @@ class AnimatedPlot:
         return self.line,
 
 
-    def animate(self, i):
+    def animate(self, frame):
         # Compute the center of the moving function based on the frame number
-        #shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
+        shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
 
         if self.signal1.get_type() != 'Exponential' and self.signal2.get_type() != 'Exponential':
             shift_caused_by_width = (self.xlim[1] - self.xlim[0] - float(self.signal2.get_width())) / 2
         else:
             shift_caused_by_width = 0
 
-        moving_center = i * self.dt * 100 * 0.5 - self.xmax - float(self.signal1.get_width()) + shift_caused_by_width
+        moving_center = frame * self.dt * 100 * 0.5 - self.xmax - 2*float(self.signal1.get_width())
 
         if self.signal1.get_type() == "Rectangle":
             self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
@@ -211,7 +209,6 @@ class AnimatedPlot:
 
         if self.signal1.get_type() == "Cosinus":
             self.y_moving = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), moving_center)
-
 
         if self.signal2.get_type() == "Rectangle":
             self.y_static = square_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
@@ -236,7 +233,7 @@ class AnimatedPlot:
         self.line_static.set_data(self.t, self.y_static)
 
         # Update the convolution plot as well
-        self.update(i)
+        self.update(frame)
 
         return self.line_moving, self.line_static, self.line
 
@@ -563,7 +560,7 @@ class App(customtkinter.CTk):
                     setattr(self.signal2, attribute, default_value)
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
             self.animated_plot = AnimatedPlot(self.simulation_frame, self.signal1, self.signal2)
-            self.animated_plot.save_static_plot(directory="C:/Users/Emilia/PycharmProjects/Convolution_animation")
+            # self.animated_plot.save_static_plot(directory="C:/Users/Emilia/PycharmProjects/Convolution_animation")
             #self.animated_plot.save_animation_as_gif
             #self.animated_plot.save_animation_as_png_sequence(directory="C:/Users/Emilia/PycharmProjects/Convolution_animation")
 
