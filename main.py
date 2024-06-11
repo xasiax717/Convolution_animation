@@ -1,4 +1,3 @@
-import math
 import os
 import tkinter as tk
 from tkinter import ttk
@@ -78,7 +77,7 @@ class AnimatedPlot:
 
         self.fig, self.ax = plt.subplots(figsize=(5, 3))
         self.line, = self.ax.plot(self.x, self.y)
-        self.ax.set_xlim(-self.xmax-1, self.xmax+1)
+        self.ax.set_xlim(-self.xmax, self.xmax)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
             self.ax.set_ylim(self.ylow, self.ylimexp+self.ylimexp*0.5)
 
@@ -93,12 +92,11 @@ class AnimatedPlot:
             axis.spines['right'].set_color('None')
             axis.spines['top'].set_color('None')
 
-        self.ax2.set_xlim(-self.xmax, self.xmax)
+        self.ax2.set_xlim(-self.xmax-1, self.xmax+1)
         num_frames = len(self.x)
 
-
-        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames), init_func=self.init, blit=True, interval=50)
-        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames), init_func=self.init, blit=True, interval=50)
+        self.anim = FuncAnimation(self.fig, self.update, frames=int(num_frames), init_func=self.init, blit=True, interval=1000)
+        self.anim2 = FuncAnimation(self.fig2, self.animate, frames=int(num_frames), init_func=self.init, blit=True, interval=1000)
 
         # Add the plot widget to the Tkinter interface using grid
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
@@ -126,7 +124,7 @@ class AnimatedPlot:
             ylim2 = amp1 + 0.2
         plt.ylim(ylim1, ylim2)
 
-        plt.xlim(-self.xmax -1, self.xmax + 1)
+        plt.xlim(-self.xmax-1, self.xmax+1)
 
         self.anim_running = True
 
@@ -187,14 +185,14 @@ class AnimatedPlot:
 
     def animate(self, frame):
         # Compute the center of the moving function based on the frame number
-        #shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
-
         if self.signal1.get_type() != 'Exponential' and self.signal2.get_type() != 'Exponential':
             shift_caused_by_width = (self.xlim[1] - self.xlim[0] - float(self.signal2.get_width())) / 2
+            shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
+
         else:
             shift_caused_by_width = 0
-
-        moving_center = frame * self.dt * 100 * 0.5 - self.xmax - 2*float(self.signal1.get_width())
+            shift_caused_by_shift = 0
+        moving_center = frame * self.dt * 100 * 0.5 - float(self.signal1.get_width())/2 + self.t[0] + shift_caused_by_width - shift_caused_by_shift
 
         if self.signal1.get_type() == "Rectangle":
             self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
@@ -210,7 +208,6 @@ class AnimatedPlot:
 
         if self.signal1.get_type() == "Cosinus":
             self.y_moving = cosinusoidal_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_frequency()), moving_center)
-
 
         if self.signal2.get_type() == "Rectangle":
             self.y_static = square_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_shift()), float(self.signal2.get_width()))
