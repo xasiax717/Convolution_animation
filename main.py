@@ -65,13 +65,23 @@ class AnimatedPlot:
             sig2 = cosinusoidal_wave(self.t, float(self.signal2.get_amplitude()), float(self.signal2.get_frequency()), float(self.signal2.get_shift()))
 
         self.x, self.y, self.xlim, self.ylimexp = convolution(sig1, sig2, self.dt)
-        # self.x = self.x
-        # self.y = self.y
+
+        # Rozszerzenie zakresu x
+        if signal2.get_type() != "Exponential":
+            new_x_start = self.x[0] - int(round(float(signal2.get_width()), 0))
+            new_x_end = self.x[-1] + int(round(float(signal2.get_width()), 0))
+            len_self_x_old = len(self.x)
+            self.x = np.arange(new_x_start, new_x_end, self.dt)
+            offset = len(self.x) - len_self_x_old
+            print(f"Nowy zakres x: {self.x[0]} do {self.x[-1]}, długość: {len(self.x)}")
+
+            new_y = np.zeros(len(self.x))
+            new_y[int(offset/2):int(offset/2) + len(self.y)] = self.y
+
+            self.y = new_y
+
 
         self.xmax = max(xmax, abs(self.xlim[0]), abs(self.xlim[1]))
-        print(xmax)
-        print(abs(self.xlim[0]))
-        print(self.xmax)
         self.ylow = np.min(self.y)
         self.yhigh = np.max(self.y)
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
@@ -96,7 +106,11 @@ class AnimatedPlot:
         self.fig, self.ax = plt.subplots(figsize=(5, 3))
         self.line, = self.ax.plot(self.x, self.y, label=generate_legend_label('rect', width=10, height=1))
         self.ax.legend(loc='upper left')
-        self.ax.set_xlim(-self.xmax-1, self.xmax+1)
+        if signal2.get_type() != "Exponential":
+            self.ax.set_xlim(-self.xmax-int(round(float(signal2.get_width()), 0)), self.xmax+int(round(float(signal2.get_width()), 0)))
+        else:
+            self.ax.set_xlim(-self.xmax-1, self.xmax+1)
+
         self.ax.set_xlabel('t', loc="right")
         self.ax.set_xlabel('t', fontsize=10, labelpad=20)
 
@@ -128,7 +142,6 @@ class AnimatedPlot:
 
         self.ax2.set_xlim(-self.xmax, self.xmax)
 
-        print(self.speed, "poczatek")
         self.frame_count = int(round(len(self.x)/200*self.speed**2, 0))
         self.num_frames = len(self.x)/self.frame_count
         self.anim = FuncAnimation(self.fig, self.update, frames=int(self.num_frames), init_func=self.init, blit=True, interval=50)
@@ -159,10 +172,10 @@ class AnimatedPlot:
             ylim1 = amp2 - 0.2
             ylim2 = amp1 + 0.2
         plt.ylim(ylim1, ylim2)
-
-        plt.xlim(-self.xmax-1, self.xmax+1)
-
-
+        if signal2.get_type() != "Exponential":
+            plt.xlim(-self.xmax-int(round(float(signal2.get_width()), 0)), self.xmax+int(round(float(signal2.get_width()), 0)))
+        else:
+            plt.xlim(-self.xmax - 1, self.xmax + 1)
 
         self.anim_running = True
 
@@ -221,15 +234,11 @@ class AnimatedPlot:
 
     def animate(self, frame):
 
-        # Compute the center of the moving function based on the frame number
         if self.signal1.get_type() != 'Exponential' and self.signal2.get_type() != 'Exponential':
-            #shift_caused_by_width = (self.xlim[1] - self.xlim[0])/2 + float(self.signal2.get_width())/2
-            #shift_caused_by_shift = abs(float(self.signal2.get_shift()) + float(self.signal1.get_shift()))
-            shift = (self.xlim[1] - self.xlim[0])/2 + float(self.signal2.get_width())/2 + float(self.signal1.get_width())/2 + abs(float(self.signal2.get_width()) - float(self.signal1.get_width()))/2 + float(self.signal1.get_width())/2
-
+            shift = self.xlim[0] + float(self.signal2.get_shift()) + float(self.signal2.get_width())/2
         else:
             shift = 0
-        moving_center = frame * self.dt * self.frame_count - float(self.signal1.get_width())/2 - float(self.signal1.get_shift()) + self.t[0] + shift #+ shift_caused_by_width #+ shift_caused_by_shift
+        moving_center = frame * self.dt * self.frame_count - float(self.signal1.get_width())/2 + self.t[0] - shift
 
         if self.signal1.get_type() == "Rectangle":
             self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
@@ -353,10 +362,9 @@ class TitlePage(customtkinter.CTk):
         self.title("Title Page")
         self.geometry("800x600")
 
-        # Logo
         logo_image = Image.open("resources/logo.png").resize((90, 50))
         logo_photo = ImageTk.PhotoImage(logo_image)
-        logo_label = customtkinter.CTkLabel(self, image=logo_photo, text="")
+        logo_label = customtkinter.CTkLabel(self, image=logo_photo)
         logo_label.image = logo_photo
         logo_label.pack(pady=10)
 
@@ -376,11 +384,11 @@ class TitlePage(customtkinter.CTk):
         team_title_label.pack(pady=10)
 
         team_members = [
-            "Joanna Brodnicka (Product Owner)",
-            "Zofia Lewkowicz (Scrum Master)",
-            "Emilia Janczarska (Naczelny Developer Kraju)",
-            "Zuzanna Górecka (Bober)",
-            "Dana Betsina (Kluska)"
+            "Joanna Ogrodnicka (Product Owner)",
+            "Zosia Prawkowicz (Scrum Master)",
+            "Emilia Janczar (Naczelny Developer Kraju)",
+            "Zuzzanna Górska (Bober)",
+            "Dana Bebecik (Kluska)"
         ]
 
         for member in team_members:
@@ -396,8 +404,7 @@ class TitlePage(customtkinter.CTk):
 
     def start_application(self):
         self.destroy()
-        app = App()
-        app.mainloop()
+        self.quit()
 
 
 class App(customtkinter.CTk):
@@ -471,15 +478,9 @@ class App(customtkinter.CTk):
 
         self.set_icon()
         self.original_sidebar_color = self.sidebar_frame.cget("fg_color")
-        self.original_button_colors = {
-            self.sidebar_button_1: self.sidebar_button_1.cget("fg_color"),
-            self.sidebar_button_2: self.sidebar_button_2.cget("fg_color"),
-            self.sidebar_button_3: self.sidebar_button_3.cget("fg_color"),
-        }
-        self.original_optionmenu_colors = {
-            self.appearance_mode_optionemenu: (self.appearance_mode_optionemenu.cget("fg_color"), self.appearance_mode_optionemenu.cget("button_color"), self.appearance_mode_optionemenu.cget("button_hover_color")),
-            self.scaling_optionemenu: (self.scaling_optionemenu.cget("fg_color"), self.scaling_optionemenu.cget("button_color"), self.scaling_optionemenu.cget("button_hover_color"))
-        }
+        self.original_button_color = self.sidebar_button_3.cget("fg_color")
+        self.original_optionmenu_color = (self.appearance_mode_optionemenu.cget("button_color"), self.appearance_mode_optionemenu.cget("button_hover_color"))
+
 
     def set_icon(self):
         image_path = "resources/logo.png"
@@ -511,6 +512,31 @@ class App(customtkinter.CTk):
             widget.configure(fg_color=fg_color, hover_color=hover_color)
         for widget in [self.appearance_mode_optionemenu, self.scaling_optionemenu]:
             widget.configure(fg_color=fg_color, button_color=button_color, button_hover_color=hover_color)
+        try:
+            for widget in [self.confirm_params_button]:
+                widget.configure(fg_color=fg_color, hover_color=hover_color)
+            for widget in [self.optionmenu_1, self.optionmenu_2]:
+                widget.configure(fg_color=fg_color, button_color=button_color, button_hover_color=hover_color)
+        except:
+            ...
+        try:
+            for widget in [self.low_speed_rb, self.medium_speed_rb, self.high_speed_rb]:
+                widget.configure(fg_color=fg_color, hover_color=hover_color)
+        except:
+            ...
+        try:
+            for widget in [self.pause_button, self.resume_button, self.next_step_button]:
+                widget.configure(fg_color=fg_color, hover_color=hover_color)
+            self.speed_slider.configure(bg=fg_color, fg="white")
+        except:
+            ...
+
+        try:
+            for widget in [self.start_button]:
+                widget.configure(fg_color=fg_color, hover_color=hover_color)
+        except:
+            ...
+
 
     def change_kenaugh_mode(self):
         customtkinter.set_appearance_mode("Light")
@@ -522,10 +548,7 @@ class App(customtkinter.CTk):
 
     def reset_to_original_colors(self):
         self.colorChange(self.original_bg_color, self.original_sidebar_color)
-        for widget, original_color in self.original_button_colors.items():
-            widget.configure(fg_color=original_color)
-        for widget, (fg_color, button_color, hover_color) in self.original_optionmenu_colors.items():
-            widget.configure(fg_color=fg_color, button_color=button_color, button_hover_color=hover_color)
+        self.buttonsColorChange(self.original_button_color, self.original_sidebar_color[0], self.original_sidebar_color[1])
 
     def change_appearance_mode_event(self, new_appearance_mode: str):  # change color scheme of app
         if self.is_mode_kenaugh:
@@ -773,7 +796,6 @@ class App(customtkinter.CTk):
                     setattr(self.signal2, attribute, default_value)
             try:
                 self.animated_plot.destroy()
-                print("End")
             except:
                 ...
 
@@ -872,14 +894,14 @@ class App(customtkinter.CTk):
             self.animated_plot.toggle_pause_animation()
 
     def toggle_pause_continue(self):
-        if not self.is_mode_kenaugh:
+        try:
             if self.animated_plot.anim_running:
                 self.pause_continue_button.configure(text="Continue")
                 self.animated_plot.toggle_pause_animation()
             else:
                 self.pause_continue_button.configure(text="Pause")
                 self.animated_plot.toggle_start_animation()
-        else:
+        except:
             if self.animated_plot.anim_running:
                 self.animated_plot.toggle_pause_animation()
             else:
@@ -900,6 +922,7 @@ class App(customtkinter.CTk):
             else:
                 x_entry.configure(fg_color=self.current_fg_color)
         if valid_values:
+            self.simulation_discrete_button_event()
             self.start_discrete_animation()
         else:
             self.show_message_box("Invalid Input",
@@ -1000,25 +1023,46 @@ class App(customtkinter.CTk):
 
         self.start_button = customtkinter.CTkButton(master=self.signals_parameters_frame, text="Start Animation", command=self.confirm_discrete_parameters)
         self.start_button.grid(row=5, column=0, columnspan=cs, pady=10)
+        if self.is_mode_kenaugh:
+            self.colorChange("white", "#f1c6db")
+            self.buttonsColorChange("#f300a2", "#30aefd", "#3559E0")
         # create the simulation frame
-        self.simulation_frame = customtkinter.CTkFrame(self)
-        self.simulation_frame.grid(row=1, column=1, columnspan=2, padx=(20, 10), pady=(20, 0), sticky="nsew")
 
-        self.canvas = tk.Canvas(self.simulation_frame, width=1200, height=300)
+
+    def simulation_discrete_button_event(self):
+        self.simulation_discrete_frame = customtkinter.CTkFrame(self)
+        self.simulation_discrete_frame.grid(row=1, column=1, columnspan=2, padx=(20, 10), pady=(20, 0), sticky="nsew")
+        self.modifying_frames.append(self.simulation_discrete_frame)
+        self.canvas = tk.Canvas(self.simulation_discrete_frame, width=1200, height=300)
         self.canvas.grid(row=0, column=0, padx=10, pady=10)
 
-        self.pause_button = customtkinter.CTkButton(master=self.simulation_frame, text="Pause", command=pause_animation)
-        self.pause_button.grid(row=1, column=0, padx=(350,10), pady=10, sticky="w")
+        self.pause_button = customtkinter.CTkButton(master=self.simulation_discrete_frame, text="Pause",
+                                                    command=pause_animation)
+        self.pause_button.grid(row=1, column=0, padx=(350, 10), pady=10, sticky="w")
 
-        self.resume_button = customtkinter.CTkButton(master=self.simulation_frame, text="Resume", command=lambda: resume_animation(self.canvas, len(self.y), x, h, 50, 150, 50, 250, 50, 50, self.colors, self.y, self.speed_slider, self.max_delay))
+        self.resume_button = customtkinter.CTkButton(master=self.simulation_discrete_frame, text="Resume",
+                                                     command=lambda: resume_animation(self.canvas, len(self.y), x,
+                                                                                      h, 50, 150, 50, 250, 50, 50,
+                                                                                      self.colors, self.y,
+                                                                                      self.speed_slider,
+                                                                                      self.max_delay))
         self.resume_button.grid(row=1, column=0, padx=10, pady=10, sticky="n")
 
-        self.next_step_button = customtkinter.CTkButton(master=self.simulation_frame, text="Next Step", command=lambda: next_step_animation(self.canvas, x, h, 50, 150, 50, 250, 50, 50, self.colors, self.y, self.speed_slider, self.max_delay))
-        self.next_step_button.grid(row=1, column=0, padx=(10,350), pady=10, sticky="e")
+        self.next_step_button = customtkinter.CTkButton(master=self.simulation_discrete_frame, text="Next Step",
+                                                        command=lambda: next_step_animation(self.canvas, x, h, 50,
+                                                                                            150, 50, 250, 50, 50,
+                                                                                            self.colors, self.y,
+                                                                                            self.speed_slider,
+                                                                                            self.max_delay))
+        self.next_step_button.grid(row=1, column=0, padx=(10, 350), pady=10, sticky="e")
 
-        self.speed_slider = tk.Scale(self.simulation_frame, from_=0, to=self.max_delay, orient=tk.HORIZONTAL, label="Speed (ms per step)")
+        self.speed_slider = tk.Scale(self.simulation_discrete_frame, from_=0, to=self.max_delay, orient=tk.HORIZONTAL,
+                                     label="Speed (ms per step)", bg="blue", fg="white")
         self.speed_slider.set(self.initial_delay)
         self.speed_slider.grid(row=2, column=0, padx=10, pady=10)
+        if self.is_mode_kenaugh:
+            self.colorChange("white", "#f1c6db")
+            self.buttonsColorChange("#f300a2", "#30aefd", "#3559E0")
 
     def destroy_modifying_frames(self):
         for frame in self.modifying_frames:
@@ -1026,7 +1070,7 @@ class App(customtkinter.CTk):
         self.modifying_frames = []
     def main_button_event(self):  # frame activated when main is chosen
         # create frame of signals type choosing
-        self.destroy()
+        self.destroy_modifying_frames()
         self.signals_type_frame = customtkinter.CTkFrame(self)
         self.modifying_frames.append(self.signals_type_frame)
         self.signals_type_frame.grid(row=0, column=1, padx=(20, 10), pady=(20, 0), sticky="nsew")
@@ -1038,8 +1082,7 @@ class App(customtkinter.CTk):
         optionmenu_var_1 = customtkinter.StringVar(value=self.signal1.get_type())  # set initial value
 
         self.optionmenu_1 = customtkinter.CTkOptionMenu(self.signals_type_frame, dynamic_resizing=False,
-                                                        values=["Rectangle", "Triangle", "Sinus", "Cosinus",
-                                                                "Exponential"], width=100, height=20,
+                                                        values=["Rectangle", "Triangle"], width=100, height=20,
                                                         command=self.choose_type_1_event, variable=optionmenu_var_1)
 
         self.optionmenu_1.grid(row=1, column=0, padx=20, pady=(0, 10))
@@ -1049,7 +1092,7 @@ class App(customtkinter.CTk):
         optionmenu_var_2 = customtkinter.StringVar(value=self.signal2.get_type())  # set initial value
 
         self.optionmenu_2 = customtkinter.CTkOptionMenu(self.signals_type_frame, dynamic_resizing=False,
-                                                        values=["Rectangle", "Triangle", "Sinus", "Cosinus",
+                                                        values=["Rectangle", "Triangle",
                                                                 "Exponential"], width=100, height=20,
                                                         command=self.choose_type_2_event, variable=optionmenu_var_2)
 
@@ -1079,20 +1122,7 @@ class App(customtkinter.CTk):
             self.label_W = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Width")
             self.label_W.grid(row=1, column=2, padx=(10,0))
             self.columns_num_1 = 3
-        if signal1 == "Sinus" or signal1 == "Cosinus":
-            self.label_A = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
-            self.label_A.grid(row=1, column=0, padx=10)
-            self.label_S = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Frequency")
-            self.label_S.grid(row=1, column=1, padx=10)
-            self.label_W = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Phase")
-            self.label_W.grid(row=1, column=2, padx=(10,0))
-            self.columns_num_1 = 3
-        if signal1 == "Exponential":
-            self.label_A = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
-            self.label_A.grid(row=1, column=0, padx=10)
-            self.label_S = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Decay rate")
-            self.label_S.grid(row=1, column=1, padx=10)
-            self.columns_num_1 = 2
+
 
         # create input for signal2
         self.label2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Enter signal 2 parameters:",
@@ -1106,14 +1136,7 @@ class App(customtkinter.CTk):
             self.label_W_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Width")
             self.label_W_2.grid(row=1, column=6, padx=10)
             self.columns_num_2 = 3
-        if signal2 == "Sinus" or signal2 == "Cosinus":
-            self.label_A_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
-            self.label_A_2.grid(row=1, column=4, padx=10)
-            self.label_S_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Frequency")
-            self.label_S_2.grid(row=1, column=5, padx=10)
-            self.label_W_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="phase")
-            self.label_W_2.grid(row=1, column=6, padx=10)
-            self.columns_num_2 = 3
+
         if signal2 == "Exponential":
             self.label_A_2 = customtkinter.CTkLabel(master=self.signals_parameters_frame, text="Amplitude", anchor="w")
             self.label_A_2.grid(row=1, column=4, padx=10)
@@ -1140,7 +1163,9 @@ class App(customtkinter.CTk):
                                                              text="Confirm parameters",
                                                              command=self.on_confirm_params_button_click)
         self.confirm_params_button.grid(row=3, column=0, columnspan=7, pady=(20, 20))
-
+        if self.is_mode_kenaugh:
+            self.colorChange("white", "#f1c6db")
+            self.buttonsColorChange("#f300a2", "#30aefd", "#3559E0")
     def simulation_button_event(self):
         # create the simulation frame
         self.simulation_frame = customtkinter.CTkFrame(self, height=1000)
@@ -1183,7 +1208,9 @@ class App(customtkinter.CTk):
         self.high_speed_rb = customtkinter.CTkRadioButton(
             self.simulation_frame, text="High", variable=self.speed_var, value="High", command=self.update_speed)
         self.high_speed_rb.grid(row=2, column=0, pady=0, padx=(100, 100))
-
+        if self.is_mode_kenaugh:
+            self.colorChange("white", "#f1c6db")
+            self.buttonsColorChange("#f300a2", "#30aefd", "#3559E0")
 
 
     def help_button_event(self):
@@ -1199,7 +1226,9 @@ class App(customtkinter.CTk):
             """
         self.textbox.insert("0.0", help_text)
         self.textbox.grid(row=1, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
-
+        if self.is_mode_kenaugh:
+            self.colorChange("white", "#f1c6db")
+            self.buttonsColorChange("#f300a2", "#30aefd", "#3559E0")
     def about_button_event(self):
         self.destroy()
         self.text_about_frame = customtkinter.CTkFrame(self)
@@ -1214,7 +1243,9 @@ class App(customtkinter.CTk):
 
         self.textbox.insert("0.0", help_text)
         self.textbox.grid(row=1, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
-
+        if self.is_mode_kenaugh:
+            self.colorChange("white", "#f1c6db")
+            self.buttonsColorChange("#f300a2", "#30aefd", "#3559E0")
     # def destroy_frames(self):
     #     for frame in self.modifying_frames:
     #         if frame.winfo_exists():  # Check if the frame still exists
@@ -1236,3 +1267,7 @@ class App(customtkinter.CTk):
 if __name__ == "__main__":
     title_page = TitlePage()
     title_page.mainloop()
+
+    app = App()
+    app.protocol("WM_DELETE_WINDOW", app.on_closing)
+    app.mainloop()
