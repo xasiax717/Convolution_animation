@@ -93,7 +93,7 @@ class AnimatedPlot:
         # Initialize the plot
         def generate_legend_label(signal_type, **params):
             if signal_type == 'Rectangle':
-                label = r'{ampli} \cdot rect({width}( x +{shift}))'.format(**params)
+                label = r'{ampli} \cdot rect({width} (x +{shift}))'.format(**params)
             elif signal_type == 'Triangle':
                 label = r'{ampli}\cdot tri({width}(x +{shift}))'.format(**params)
             elif signal_type == 'Exponential':
@@ -116,7 +116,7 @@ class AnimatedPlot:
 
         self.ax.set_ylabel('Amplituda', rotation=0)
         self.ax.set_ylabel('Amplituda', fontsize=10, labelpad=20)
-        self.ax.xaxis.set_label_coords(1, -0.05)
+        self.ax.xaxis.set_label_coords(1.02, 0.06)
         self.ax.yaxis.set_label_coords(0.5, 1.02)
 
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
@@ -131,7 +131,7 @@ class AnimatedPlot:
         self.ax2.set_xlabel('τ', fontsize=10, labelpad=20)
         self.ax2.set_ylabel('Amplituda', rotation=0)
         self.ax2.set_ylabel('Amplituda', fontsize=10, labelpad=20)
-        self.ax2.xaxis.set_label_coords(1, -0.05)
+        self.ax.xaxis.set_label_coords(1.02, 0.06)
         self.ax2.yaxis.set_label_coords(0.5, 1.05)
         self.ax2.legend(loc='upper left')
 
@@ -378,7 +378,7 @@ class TitlePage(customtkinter.CTk):
         project_label = customtkinter.CTkLabel(self, text="Project Name: Convolution Animation", font=("Helvetica", 24))
         project_label.pack(pady=5)
 
-        university_label = customtkinter.CTkLabel(self, text="Warsaw University of Technologies",
+        university_label = customtkinter.CTkLabel(self, text="Warsaw University of Technology",
                                                   font=("Helvetica", 20))
         university_label.pack(pady=5)
 
@@ -1242,7 +1242,50 @@ class App(customtkinter.CTk):
         self.text_frame_label.grid(row=0, column=0, pady=(20, 0))
         self.textbox = customtkinter.CTkTextbox(self.text_about_frame, width=960, height=450)
         help_text = """
-            """
+        ### Convolution Animation App
+
+            Welcome to the Convolution Animation App! This application allows you to visualize convolution operations between two signals.
+
+            #### What is Convolution?
+
+            Convolution is a mathematical operation that combines two signals to produce a third signal. In the context of this app, you can choose different 
+            types of signals (e.g., Rectangle, Triangle, Sinus, Cosinus, Exponential) and adjust their parameters to observe how convolution affects them.
+
+            #### How to Use the Application:
+
+            1. **Choosing Signal Types:**
+               - Click on the "Choose signal 1" and "Choose signal 2" dropdown menus in the main window to select the types of signals you want to use for 
+               convolution.
+
+            2. **Setting Signal Parameters:**
+               - After selecting signal types, enter the parameters for each signal in the provided input fields. The parameters to be entered depend on the 
+               chosen signal types.
+
+            3. **Confirming Parameters:**
+               - Once you've entered the parameters for both signals, click the "Confirm parameters" button to validate and apply them.
+
+            4. **Starting the Animation:**
+               - After confirming the parameters, press the play button (green arrow) to start the animation. You can pause the animation at any time by 
+               clicking the pause button (red square).
+
+            #### Additional Options:
+
+            - **Appearance Mode:** You can change the appearance mode of the app (Light, Dark, or System) using the dropdown menu in the sidebar.
+            - **UI Scaling:** Adjust the size of UI elements by selecting a scaling option from the dropdown menu in the sidebar.
+
+            For further assistance, please refer to the documentation or contact support.
+        
+        
+        """
+
+
+
+
+
+
+
+
+
         self.textbox.insert("0.0", help_text)
         self.textbox.grid(row=1, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
         if self.is_mode_kenaugh:
@@ -1258,7 +1301,31 @@ class App(customtkinter.CTk):
         self.text_frame_label.grid(row=0, column=0, pady=(20, 0))
         self.textbox = customtkinter.CTkTextbox(self.text_about_frame, width=960, height=450)
         help_text = """
+            ### Our Team
+
+        Hey there! We're a group of students from the Warsaw University of Technology, Faculty of Electronics and Information Technology. Meet the team:
+
+        - Zuzanna Gorecka
+        - Zofia Lewkowicz
+        - Emilia Anczarska
+        - Dana Betsina
+        - Joanna Brodnicka
+
+        Each member brings a unique set of skills and perspectives to the table, contributing to the success and innovation of our projects.
+
+        ### Our Project
+
+        We've got a project brewing that we're pretty excited about. Basically, we're working on an app to help young 
+        students wrap their heads around a tricky part of signals theory called convolution.
+
+        ### Our Goal
+
+        Our main aim? To make learning about signals and convolution way less daunting. We want our app to be super user-friendly and fun to use, 
+        so students can dive into the world of signal processing with confidence.
+
+        So, that's us in a nutshell – a bunch of tech enthusiasts on a mission to simplify the complicated and make learning awesome!
         """
+
 
         self.textbox.insert("0.0", help_text)
         self.textbox.grid(row=1, column=0, padx=(20, 20), pady=(20, 20), sticky="nsew")
