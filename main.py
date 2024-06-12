@@ -81,16 +81,43 @@ class AnimatedPlot:
             self.t = np.arange(self.x[0], self.x[-1], self.dt)
 
         # Initialize the plot
+        def generate_legend_label(signal_type, **params):
+            if signal_type == 'rect':
+                label = r'rect: Width = {width}, Height = {height}'.format(**params)
+            elif signal_type == 'tri':
+                label = r'Triangular: Base = {base}, Height = {height}'.format(**params)
+            elif signal_type == 'exp':
+                label = r'Exponential: Rate = {rate}'.format(**params)
+            else:
+                label = 'Unknown Signal'
+            return r'${}$'.format(label)
+
 
         self.fig, self.ax = plt.subplots(figsize=(5, 3))
-        self.line, = self.ax.plot(self.x, self.y)
+        self.line, = self.ax.plot(self.x, self.y, label=generate_legend_label('rect', width=10, height=1))
+        self.ax.legend(loc='upper left')
         self.ax.set_xlim(-self.xmax-1, self.xmax+1)
+        self.ax.set_xlabel('t', loc="right")
+        self.ax.set_xlabel('t', fontsize=10, labelpad=20)
+
+        self.ax.set_ylabel('Amplituda', rotation=0)
+        self.ax.set_ylabel('Amplituda', fontsize=10, labelpad=20)
+        self.ax.xaxis.set_label_coords(1, -0.05)
+        self.ax.yaxis.set_label_coords(0.5, 1.02)
+
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
             self.ax.set_ylim(self.ylow, self.ylimexp+self.ylimexp*0.5)
 
         self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
         self.line_moving, = self.ax2.plot([], [], lw=2)
         self.line_static, = self.ax2.plot([], [], lw=2)
+        self.ax2.set_xlabel('τ', loc="right")
+        self.ax2.set_xlabel('τ', fontsize=10, labelpad=20)
+        self.ax2.set_ylabel('Amplituda', rotation=0)
+        self.ax2.set_ylabel('Amplituda', fontsize=10, labelpad=20)
+        self.ax2.xaxis.set_label_coords(1, -0.05)
+        self.ax2.yaxis.set_label_coords(0.5, 1.05)
+
 
         for axis in (self.ax, self.ax2):
             axis.spines['left'].set_position('zero')
@@ -134,6 +161,8 @@ class AnimatedPlot:
         plt.ylim(ylim1, ylim2)
 
         plt.xlim(-self.xmax-1, self.xmax+1)
+
+
 
         self.anim_running = True
 
@@ -194,13 +223,13 @@ class AnimatedPlot:
 
         # Compute the center of the moving function based on the frame number
         if self.signal1.get_type() != 'Exponential' and self.signal2.get_type() != 'Exponential':
-            shift_caused_by_width = (self.xlim[1] - self.xlim[0] - float(self.signal2.get_width())) / 2
-            shift_caused_by_shift = ((self.xlim[1] + self.xlim[0])/2 + float(self.signal2.get_shift())) / 2
+            #shift_caused_by_width = (self.xlim[1] - self.xlim[0])/2 + float(self.signal2.get_width())/2
+            #shift_caused_by_shift = abs(float(self.signal2.get_shift()) + float(self.signal1.get_shift()))
+            shift = (self.xlim[1] - self.xlim[0])/2 + float(self.signal2.get_width())/2 + float(self.signal1.get_width())/2 + abs(float(self.signal2.get_width()) - float(self.signal1.get_width()))/2 + float(self.signal1.get_width())/2
 
         else:
-            shift_caused_by_width = 0
-            shift_caused_by_shift = 0
-        moving_center = frame * self.dt * self.frame_count  - float(self.signal1.get_width())/2 + self.t[0] + shift_caused_by_width
+            shift = 0
+        moving_center = frame * self.dt * self.frame_count - float(self.signal1.get_width())/2 - float(self.signal1.get_shift()) + self.t[0] + shift #+ shift_caused_by_width #+ shift_caused_by_shift
 
         if self.signal1.get_type() == "Rectangle":
             self.y_moving = square_wave(self.t, float(self.signal1.get_amplitude()), moving_center, float(self.signal1.get_width()))
