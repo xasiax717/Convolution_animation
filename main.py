@@ -93,9 +93,9 @@ class AnimatedPlot:
         # Initialize the plot
         def generate_legend_label(signal_type, **params):
             if signal_type == 'Rectangle':
-                label = r'{ampli} \cdot rect({width} x +{shift})'.format(**params)
+                label = r'{ampli} \cdot rect({width}( x +{shift}))'.format(**params)
             elif signal_type == 'Triangle':
-                label = r'{ampli}\cdot tri({width}x +{shift})'.format(**params)
+                label = r'{ampli}\cdot tri({width}(x +{shift}))'.format(**params)
             elif signal_type == 'Exponential':
                 label = r'{ampli}\cdot e^{{\dfrac{{t}}{{{rate}}}}}'.format(**params)
             else:
@@ -366,7 +366,7 @@ class TitlePage(customtkinter.CTk):
 
         logo_image = Image.open("resources/logo.png").resize((90, 50))
         logo_photo = ImageTk.PhotoImage(logo_image)
-        logo_label = customtkinter.CTkLabel(self, image=logo_photo)
+        logo_label = customtkinter.CTkLabel(self, image=logo_photo, text="")
         logo_label.image = logo_photo
         logo_label.pack(pady=10)
 
