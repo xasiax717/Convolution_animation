@@ -30,8 +30,8 @@ class AnimatedPlot:
 
             self.t = np.arange(-xmax, xmax, self.dt)
         else:
-            xmax = abs(float(signal1.get_shift())) + abs(float(signal1.get_width())) / 2
-            self.t = np.arange(-xmax*2.5, xmax*2.5, self.dt)
+            xmax = abs(float(signal1.get_shift())) + abs(float(signal2.get_rate()))
+            self.t = np.arange(-xmax, xmax, self.dt)
 
         if signal1.get_type() == "Rectangle":
             sig1 = square_wave(self.t, float(self.signal1.get_amplitude()), float(self.signal1.get_shift()), float(self.signal1.get_width()))
@@ -76,14 +76,23 @@ class AnimatedPlot:
             print(f"Nowy zakres x: {self.x[0]} do {self.x[-1]}, długość: {len(self.x)}")
 
             new_y = np.zeros(len(self.x))
-            new_y[int(offset/2):int(offset/2) + len(self.y)] = self.y
+            new_y[int(offset / 2):int(offset / 2) + len(self.y)] = self.y
 
             self.y = new_y
-
+        else:
+            begin_zeros = False
+            for i in range(len(self.y)):
+                print(self.y[i])
+                if begin_zeros:
+                    "wstaw"
+                    self.y[i] = round(1.5*self.ylimexp,1) + 0.1
+                if round(self.y[i], 2) == round(1.5*self.ylimexp,2):
+                    begin_zeros = True
 
         self.xmax = max(xmax, abs(self.xlim[0]), abs(self.xlim[1]))
         self.ylow = np.min(self.y)
         self.yhigh = np.max(self.y)
+
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
             self.xmax = xmax
             self.t = np.arange(self.x[0], self.x[-1], self.dt)
@@ -93,7 +102,7 @@ class AnimatedPlot:
         # Initialize the plot
         def generate_legend_label(signal_type, **params):
             if signal_type == 'Rectangle':
-                label = r'{ampli} \cdot rect({width} (x +{shift}))'.format(**params)
+                label = r'{ampli} \cdot rect({width}( x +{shift}))'.format(**params)
             elif signal_type == 'Triangle':
                 label = r'{ampli}\cdot tri({width}(x +{shift}))'.format(**params)
             elif signal_type == 'Exponential':
@@ -116,7 +125,7 @@ class AnimatedPlot:
 
         self.ax.set_ylabel('Amplituda', rotation=0)
         self.ax.set_ylabel('Amplituda', fontsize=10, labelpad=20)
-        self.ax.xaxis.set_label_coords(1.02, 0.06)
+        self.ax.xaxis.set_label_coords(1, -0.05)
         self.ax.yaxis.set_label_coords(0.5, 1.02)
 
         if signal1.get_type() == 'Exponential' or signal2.get_type() == 'Exponential':
@@ -131,7 +140,7 @@ class AnimatedPlot:
         self.ax2.set_xlabel('τ', fontsize=10, labelpad=20)
         self.ax2.set_ylabel('Amplituda', rotation=0)
         self.ax2.set_ylabel('Amplituda', fontsize=10, labelpad=20)
-        self.ax.xaxis.set_label_coords(1.02, 0.06)
+        self.ax2.xaxis.set_label_coords(1, -0.05)
         self.ax2.yaxis.set_label_coords(0.5, 1.05)
         self.ax2.legend(loc='upper left')
 
@@ -1075,22 +1084,22 @@ class App(customtkinter.CTk):
         self.destroy_modifying_frames()
         self.signals_type_frame = customtkinter.CTkFrame(self)
         self.modifying_frames.append(self.signals_type_frame)
-        self.signals_type_frame.grid(row=0, column=1, padx=(20, 10), pady=(20, 0), sticky="nsew")
+        self.signals_type_frame.grid(row=0, column=1, padx=(10, 10), pady=(20, 0), sticky="nsew")
         # todo: change the font
         font = customtkinter.CTkFont(size=15)
         self.label_type_1 = customtkinter.CTkLabel(master=self.signals_type_frame, text="Choose signal 1", width=70,
                                                    height=10, font=font)
-        self.label_type_1.grid(row=0, column=0, padx=20, pady=20)
+        self.label_type_1.grid(row=0, column=0, padx=10, pady=20)
         optionmenu_var_1 = customtkinter.StringVar(value=self.signal1.get_type())  # set initial value
 
         self.optionmenu_1 = customtkinter.CTkOptionMenu(self.signals_type_frame, dynamic_resizing=False,
                                                         values=["Rectangle", "Triangle"], width=100, height=20,
                                                         command=self.choose_type_1_event, variable=optionmenu_var_1)
 
-        self.optionmenu_1.grid(row=1, column=0, padx=20, pady=(0, 10))
+        self.optionmenu_1.grid(row=1, column=0, padx=10, pady=(0, 10))
         self.label_type_2 = customtkinter.CTkLabel(master=self.signals_type_frame, text="Choose signal 2", width=70,
                                                    height=25, font=font)
-        self.label_type_2.grid(row=0, column=1, padx=20, pady=10)
+        self.label_type_2.grid(row=0, column=1, padx=10, pady=10)
         optionmenu_var_2 = customtkinter.StringVar(value=self.signal2.get_type())  # set initial value
 
         self.optionmenu_2 = customtkinter.CTkOptionMenu(self.signals_type_frame, dynamic_resizing=False,
@@ -1098,18 +1107,18 @@ class App(customtkinter.CTk):
                                                                 "Exponential"], width=100, height=20,
                                                         command=self.choose_type_2_event, variable=optionmenu_var_2)
 
-        self.optionmenu_2.grid(row=1, column=1, padx=20, pady=(5, 10))
+        self.optionmenu_2.grid(row=1, column=1, padx=10, pady=(5, 10))
 
         equations_text = ("Wzory sygnałów do obliczania splotu :)\n"
                           "Rectangle: Amplitude * rect(Width * (x + Shift))\n"
                           "Triangle: Amplitude * tri(Width * (x + Shift))\n"
                           "Exponential: Amplitude * e^   (x / Rate)")
 
-        equations_font = customtkinter.CTkFont(size=15, family="Helvetica", weight="normal")
+        equations_font = customtkinter.CTkFont(size=11, family="Helvetica", weight="normal")
 
         self.additional_text = customtkinter.CTkLabel(master=self.signals_type_frame,
                                                       text=equations_text,
-                                                      width=300,
+                                                      width=200,
                                                       height=100,
                                                       font=equations_font,
                                                       justify="left")
