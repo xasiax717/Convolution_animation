@@ -92,19 +92,19 @@ class AnimatedPlot:
 
         # Initialize the plot
         def generate_legend_label(signal_type, **params):
-            if signal_type == 'rect':
-                label = r'rect: Width = {width}, Height = {height}'.format(**params)
-            elif signal_type == 'tri':
-                label = r'Triangular: Base = {base}, Height = {height}'.format(**params)
-            elif signal_type == 'exp':
-                label = r'Exponential: Rate = {rate}'.format(**params)
+            if signal_type == 'Rectangle':
+                label = r'{ampli} \cdot rect({width} x +{shift})'.format(**params)
+            elif signal_type == 'Triangle':
+                label = r'{ampli}\cdot tri({width}x +{shift})'.format(**params)
+            elif signal_type == 'Exponential':
+                label = r'{ampli}\cdot e^{{\dfrac{{t}}{{{rate}}}}}'.format(**params)
             else:
                 label = 'Unknown Signal'
             return r'${}$'.format(label)
 
 
         self.fig, self.ax = plt.subplots(figsize=(5, 3))
-        self.line, = self.ax.plot(self.x, self.y, label=generate_legend_label('rect', width=10, height=1))
+        self.line, = self.ax.plot(self.x, self.y)
         self.ax.legend(loc='upper left')
         if signal2.get_type() != "Exponential":
             self.ax.set_xlim(-self.xmax-int(round(float(signal2.get_width()), 0)), self.xmax+int(round(float(signal2.get_width()), 0)))
@@ -123,15 +123,17 @@ class AnimatedPlot:
             self.ax.set_ylim(self.ylow, self.ylimexp+self.ylimexp*0.5)
 
         self.fig2, self.ax2 = plt.subplots(figsize=(5, 3))
-        self.line_moving, = self.ax2.plot([], [], lw=2)
-        self.line_static, = self.ax2.plot([], [], lw=2)
+
+
+        self.line_moving, = self.ax2.plot([], [], lw=2, label=generate_legend_label(self.signal1.get_type(), width=self.signal1.get_width(), shift=self.signal1.get_shift(), ampli=self.signal1.get_amplitude(), rate=self.signal1.get_rate()))
+        self.line_static, = self.ax2.plot([], [], lw=2, label=generate_legend_label(self.signal2.get_type(), width=self.signal2.get_width(), shift=self.signal2.get_shift(), ampli=self.signal2.get_amplitude(), rate=self.signal2.get_rate()))
         self.ax2.set_xlabel('τ', loc="right")
         self.ax2.set_xlabel('τ', fontsize=10, labelpad=20)
         self.ax2.set_ylabel('Amplituda', rotation=0)
         self.ax2.set_ylabel('Amplituda', fontsize=10, labelpad=20)
         self.ax2.xaxis.set_label_coords(1, -0.05)
         self.ax2.yaxis.set_label_coords(0.5, 1.05)
-
+        self.ax2.legend(loc='upper left')
 
         for axis in (self.ax, self.ax2):
             axis.spines['left'].set_position('zero')
@@ -1098,6 +1100,21 @@ class App(customtkinter.CTk):
 
         self.optionmenu_2.grid(row=1, column=1, padx=20, pady=(5, 10))
 
+        equations_text = ("Wzory sygnałów do obliczania splotu :)\n"
+                          "Rectangle: Amplitude * rect(Width * (x + Shift))\n"
+                          "Triangle: Amplitude * tri(Width * (x + Shift))\n"
+                          "Exponential: Amplitude * e^   (x / Rate)")
+
+        equations_font = customtkinter.CTkFont(size=15, family="Helvetica", weight="normal")
+
+        self.additional_text = customtkinter.CTkLabel(master=self.signals_type_frame,
+                                                      text=equations_text,
+                                                      width=300,
+                                                      height=100,
+                                                      font=equations_font,
+                                                      justify="left")
+        self.additional_text.grid(row=2, column=0, columnspan=2, padx=20, pady=(10, 15), sticky="nsew")
+
         # create frame of signals parameters choosing
         signal1 = self.signal1.get_type()
         signal2 = self.signal2.get_type()
@@ -1145,6 +1162,8 @@ class App(customtkinter.CTk):
             self.columns_num_2 = 2
         self.entries_1 = []
         self.entries_2 = []
+
+
 
         # Create widgets for entries_1
         for i in range(self.columns_num_1):
